@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -17,27 +16,24 @@ export function RegisterForm() {
     setLoading(true);
     setError("");
 
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName
-        },
-        emailRedirectTo:
-          typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
-      }
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, email, password })
     });
+
+    const result = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
 
     setLoading(false);
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (!response.ok) {
+      setError(result.error ?? "No se pudo crear la cuenta.");
       return;
     }
 
-    router.replace("/login?success=Cuenta%20creada.%20Revisa%20tu%20correo%20si%20tu%20proyecto%20requiere%20confirmacion");
+    router.replace("/login?success=Cuenta%20creada.%20Ya%20puedes%20iniciar%20sesion");
     router.refresh();
   }
 
