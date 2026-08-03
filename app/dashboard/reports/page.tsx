@@ -2,9 +2,11 @@ import { ensureRole } from "@/lib/auth";
 import { getReportsData } from "@/lib/dashboard-data";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { InvoiceActions } from "@/components/forms/invoice-actions";
+import { getDictionary } from "@/lib/i18n/server";
 
 export default async function ReportsPage() {
   await ensureRole(["admin", "manager"]);
+  const t = await getDictionary();
   const { todaySales, monthSales, products, topProducts } = await getReportsData();
   const todayTotal = todaySales.reduce((sum, sale) => sum + sale.total_amount, 0);
   const monthTotal = monthSales.reduce((sum, sale) => sum + sale.total_amount, 0);
@@ -15,25 +17,25 @@ export default async function ReportsPage() {
   return (
     <section className="page-grid">
       <header className="page-header">
-        <h1>Reportes</h1>
-        <p>Consulta el rendimiento diario y mensual del negocio para tomar mejores decisiones.</p>
+        <h1>{t.reports.title}</h1>
+        <p>{t.reports.subtitle}</p>
       </header>
 
       <div className="cards-grid">
         <article className="card">
-          <div className="metric-label">Total vendido hoy</div>
+          <div className="metric-label">{t.reports.soldToday}</div>
           <p className="metric-value">{formatCurrency(todayTotal)}</p>
         </article>
         <article className="card">
-          <div className="metric-label">Ventas del mes</div>
+          <div className="metric-label">{t.reports.monthSales}</div>
           <p className="metric-value">{formatCurrency(monthTotal)}</p>
         </article>
         <article className="card">
-          <div className="metric-label">Ticket promedio hoy</div>
+          <div className="metric-label">{t.reports.avgTicketToday}</div>
           <p className="metric-value">{formatCurrency(averageTicket)}</p>
         </article>
         <article className="card">
-          <div className="metric-label">Productos con stock bajo</div>
+          <div className="metric-label">{t.reports.lowStockProducts}</div>
           <p className="metric-value">{lowStock.length}</p>
         </article>
       </div>
@@ -41,16 +43,16 @@ export default async function ReportsPage() {
 
 
       <article className="card">
-        <h2>Facturas del mes</h2>
+        <h2>{t.reports.monthInvoices}</h2>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Factura</th>
-                <th>Pago</th>
-                <th>Total</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
+                <th>{t.sales.invoice}</th>
+                <th>{t.reports.payment}</th>
+                <th>{t.common.total}</th>
+                <th>{t.common.date}</th>
+                <th>{t.common.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -66,7 +68,7 @@ export default async function ReportsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5}>No hay facturas registradas este mes.</td>
+                  <td colSpan={5}>{t.reports.noInvoicesMonth}</td>
                 </tr>
               )}
             </tbody>
@@ -76,7 +78,7 @@ export default async function ReportsPage() {
 
       <div className="two-columns">
         <article className="card">
-          <h2>Productos mas vendidos</h2>
+          <h2>{t.reports.topProducts}</h2>
           <div className="report-bars">
             {topProducts.length ? (
               topProducts.map((product) => (
@@ -84,7 +86,7 @@ export default async function ReportsPage() {
                   <div>
                     <strong>{product.name}</strong>
                     <div className="muted">
-                      {product.quantity} unidades | {formatCurrency(product.subtotal)}
+                      {product.quantity} {t.reports.units} | {formatCurrency(product.subtotal)}
                     </div>
                   </div>
                   <div
@@ -94,26 +96,26 @@ export default async function ReportsPage() {
                 </div>
               ))
             ) : (
-              <div className="topbar-card">Todavia no hay suficientes datos de ventas.</div>
+              <div className="topbar-card">{t.reports.notEnoughData}</div>
             )}
           </div>
         </article>
 
         <article className="card">
-          <h2>Alertas de inventario</h2>
+          <h2>{t.reports.inventoryAlerts}</h2>
           <div className="form-grid">
             {lowStock.length ? (
               lowStock.map((product) => (
                 <div key={product.id} className="topbar-card">
                   <strong>{product.name}</strong>
                   <div className="muted">
-                    Stock {product.stock} | Minimo {product.min_stock}
+                    {t.dashboard.stock} {product.stock} | {t.dashboard.min} {product.min_stock}
                   </div>
-                  <div>{formatCurrency(product.sale_price)} precio de venta</div>
+                  <div>{formatCurrency(product.sale_price)} {t.reports.salePriceLabel}</div>
                 </div>
               ))
             ) : (
-              <div className="topbar-card">No hay productos en alerta de inventario.</div>
+              <div className="topbar-card">{t.reports.noInventoryAlerts}</div>
             )}
           </div>
         </article>

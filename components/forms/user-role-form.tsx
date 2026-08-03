@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLanguage } from "@/lib/i18n/context";
 
 export function UserRoleForm({
   id,
@@ -13,6 +14,7 @@ export function UserRoleForm({
   isActive: boolean;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [nextRole, setNextRole] = useState(role);
   const [active, setActive] = useState(isActive);
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export function UserRoleForm({
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No se pudo actualizar el usuario");
+      setError(result.error ?? t.users.updateError);
       return;
     }
 
@@ -49,23 +51,23 @@ export function UserRoleForm({
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="inline-actions">
         <div className="field">
-          <label>Rol</label>
+          <label>{t.users.role}</label>
           <select value={nextRole} onChange={(e) => setNextRole(e.target.value as typeof role)}>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="cashier">Cajero</option>
+            <option value="admin">{t.users.admin}</option>
+            <option value="manager">{t.users.manager}</option>
+            <option value="cashier">{t.users.cashier}</option>
           </select>
         </div>
         <div className="field">
-          <label>Estado</label>
+          <label>{t.common.status}</label>
           <select value={active ? "true" : "false"} onChange={(e) => setActive(e.target.value === "true")}>
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
+            <option value="true">{t.common.active}</option>
+            <option value="false">{t.common.inactive}</option>
           </select>
         </div>
       </div>
       <button type="button" className="button-secondary" onClick={save} disabled={loading}>
-        {loading ? "Guardando..." : "Guardar cambios"}
+        {loading ? t.common.saving : t.common.saveChanges}
       </button>
     </div>
   );

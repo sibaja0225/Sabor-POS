@@ -3,15 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { classNames } from "@/lib/utils";
-
-const links = [
-  { href: "/dashboard", label: "Resumen", icon: "⌂" },
-  { href: "/dashboard/products", label: "Productos", icon: "▣" },
-  { href: "/dashboard/inventory", label: "Inventario", icon: "▤" },
-  { href: "/dashboard/sales", label: "Ventas", icon: "◈" },
-  { href: "/dashboard/reports", label: "Reportes", icon: "◉" },
-  { href: "/dashboard/users", label: "Usuarios", icon: "◇" }
-];
+import { useLanguage } from "@/lib/i18n/context";
 
 export function Sidebar({
   role,
@@ -21,6 +13,16 @@ export function Sidebar({
   name: string;
 }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const links = [
+    { href: "/dashboard", label: t.nav.summary, icon: "⌂" },
+    { href: "/dashboard/products", label: t.nav.products, icon: "▣" },
+    { href: "/dashboard/inventory", label: t.nav.inventory, icon: "▤" },
+    { href: "/dashboard/sales", label: t.nav.sales, icon: "◈" },
+    { href: "/dashboard/reports", label: t.nav.reports, icon: "◉" },
+    { href: "/dashboard/users", label: t.nav.users, icon: "◇" }
+  ];
 
   return (
     <aside className="sidebar">
@@ -28,7 +30,7 @@ export function Sidebar({
         <img src="/sabor-pos-logo.png" alt="Sabor POS" className="brand-logo" />
         <div>
           <strong>Sabor POS</strong>
-          <span>Ventas, inventario y control diario</span>
+          <span>{t.nav.brandTagline}</span>
         </div>
       </div>
       <nav>
@@ -45,7 +47,7 @@ export function Sidebar({
       </nav>
       <footer>
         <strong>{name}</strong>
-        <div className="muted">Rol: {role}</div>
+        <div className="muted">{t.nav.role}: {role}</div>
       </footer>
     </aside>
   );

@@ -3,35 +3,37 @@ import { getProducts } from "@/lib/dashboard-data";
 import { ProductForm } from "@/components/forms/product-form";
 import { ProductActions } from "@/components/forms/product-actions";
 import { formatCurrency } from "@/lib/utils";
+import { getDictionary } from "@/lib/i18n/server";
 
 export default async function ProductsPage() {
   await ensureRole(["admin", "manager"]);
+  const t = await getDictionary();
   const products = await getProducts();
 
   return (
     <section className="page-grid">
       <header className="page-header">
-        <h1>Productos</h1>
-        <p>Registra alimentos, bebidas y cualquier articulo que vendas en la soda.</p>
+        <h1>{t.products.title}</h1>
+        <p>{t.products.subtitle}</p>
       </header>
 
       <div className="two-columns">
         <article className="card">
-          <h2>Nuevo producto</h2>
+          <h2>{t.products.newProduct}</h2>
           <ProductForm />
         </article>
         <article className="card">
-          <h2>Catalogo actual</h2>
+          <h2>{t.products.currentCatalog}</h2>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Producto</th>
-                  <th>SKU</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <th>{t.products.product}</th>
+                  <th>{t.products.sku}</th>
+                  <th>{t.products.price}</th>
+                  <th>{t.products.stock}</th>
+                  <th>{t.common.status}</th>
+                  <th>{t.common.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -46,7 +48,7 @@ export default async function ProductsPage() {
                     <td>{product.stock}</td>
                     <td>
                       <span className={`status-badge ${product.active ? "status-ok" : "status-neutral"}`}>
-                        {product.active ? "Activo" : "Inactivo"}
+                        {product.active ? t.common.active : t.common.inactive}
                       </span>
                     </td>
                     <td><ProductActions product={product} /></td>

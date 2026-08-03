@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/context";
 
 export function LoginForm() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,11 +40,11 @@ export function LoginForm() {
     <form onSubmit={handleSubmit} className="form-grid">
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="field">
-        <label htmlFor="email">Correo electronico</label>
+        <label htmlFor="email">{t.auth.email}</label>
         <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </div>
       <div className="field">
-        <label htmlFor="password">Contraseña</label>
+        <label htmlFor="password">{t.auth.password}</label>
         <input
           id="password"
           type="password"
@@ -53,10 +55,10 @@ export function LoginForm() {
         />
       </div>
       <button type="submit" className="button" disabled={loading}>
-        {loading ? "Ingresando..." : "Iniciar sesion"}
+        {loading ? t.auth.signingIn : t.auth.signIn}
       </button>
       <Link className="button-secondary" href="/register">
-        Crear cuenta
+        {t.auth.createAccount}
       </Link>
     </form>
   );

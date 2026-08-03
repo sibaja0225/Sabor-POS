@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { RegisterForm } from "@/components/forms/register-form";
+import { LanguageToggle } from "@/components/layout/language-toggle";
+import { getDictionary } from "@/lib/i18n/server";
 
 export default async function RegisterPage({
   searchParams
@@ -7,16 +9,20 @@ export default async function RegisterPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
+  const t = await getDictionary();
 
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <h1>Crea tu cuenta</h1>
-        <p>El primer usuario registrado quedara con rol administrador.</p>
+        <div className="auth-topbar">
+          <LanguageToggle />
+        </div>
+        <h1>{t.auth.registerTitle}</h1>
+        <p>{t.auth.registerSubtitle}</p>
         {params.error ? <div className="alert alert-error">{params.error}</div> : null}
         <RegisterForm />
         <p className="muted">
-          Ya tienes cuenta? <Link href="/login">Iniciar sesion</Link>
+          {t.auth.haveAccount} <Link href="/login">{t.auth.signIn}</Link>
         </p>
       </section>
     </main>

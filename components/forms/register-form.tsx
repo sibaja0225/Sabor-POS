@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/context";
 
 export function RegisterForm() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +47,7 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit} className="form-grid">
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="field">
-        <label htmlFor="full-name">Nombre completo</label>
+        <label htmlFor="full-name">{t.auth.fullName}</label>
         <input
           id="full-name"
           value={fullName}
@@ -55,7 +57,7 @@ export function RegisterForm() {
         />
       </div>
       <div className="field">
-        <label htmlFor="register-email">Correo electronico</label>
+        <label htmlFor="register-email">{t.auth.email}</label>
         <input
           id="register-email"
           type="email"
@@ -65,7 +67,7 @@ export function RegisterForm() {
         />
       </div>
       <div className="field">
-        <label htmlFor="register-password">Contraseña</label>
+        <label htmlFor="register-password">{t.auth.password}</label>
         <input
           id="register-password"
           type="password"
@@ -76,7 +78,7 @@ export function RegisterForm() {
         />
       </div>
       <button type="submit" className="button" disabled={loading}>
-        {loading ? "Creando cuenta..." : "Crear cuenta"}
+        {loading ? t.auth.creatingAccount : t.auth.createAccount}
       </button>
     </form>
   );

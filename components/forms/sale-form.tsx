@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/context";
 
 type ProductOption = {
   id: string;
@@ -20,6 +21,7 @@ type LineItem = {
 
 export function SaleForm({ products }: { products: ProductOption[] }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [customerName, setCustomerName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("efectivo");
   const [items, setItems] = useState<LineItem[]>([
@@ -81,11 +83,11 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No se pudo registrar la venta");
+      setError(result.error ?? t.sales.saleError);
       return;
     }
 
-    setMessage(`Venta registrada correctamente. Factura: ${result.invoice_number ?? "Generada"}`);
+    setMessage(`${t.sales.saleOk} ${result.invoice_number ?? ""}`);
     setCustomerName("");
     setPaymentMethod("efectivo");
     setItems([
@@ -103,15 +105,15 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
       {message ? <div className="alert alert-success">{message}</div> : null}
       <div className="inline-actions">
         <div className="field">
-          <label>Cliente</label>
-          <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Opcional" />
+          <label>{t.sales.customer}</label>
+          <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder={t.common.optional} />
         </div>
         <div className="field">
-          <label>Metodo de pago</label>
+          <label>{t.sales.paymentMethod}</label>
           <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} required>
-            <option value="efectivo">Efectivo</option>
-            <option value="sinpe">SINPE</option>
-            <option value="tarjeta">Tarjeta</option>
+            <option value="efectivo">{t.sales.cash}</option>
+            <option value="sinpe">{t.sales.sinpe}</option>
+            <option value="tarjeta">{t.sales.card}</option>
           </select>
         </div>
       </div>
@@ -123,7 +125,7 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
           return (
             <div className="line-item-row" key={`${item.product_id}-${index}`}>
               <div className="field">
-                <label>Producto</label>
+                <label>{t.sales.product}</label>
                 <select
                   value={item.product_id}
                   onChange={(e) => updateItem(index, { product_id: e.target.value })}
@@ -131,13 +133,13 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
                 >
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
-                      {product.name} ({product.stock} en stock)
+                      {product.name} ({product.stock} {t.sales.inStock})
                     </option>
                   ))}
                 </select>
               </div>
               <div className="field">
-                <label>Cantidad</label>
+                <label>{t.sales.quantity}</label>
                 <input
                   type="number"
                   min="1"
@@ -153,7 +155,7 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
                 onClick={() => removeItem(index)}
                 disabled={items.length === 1}
               >
-                Quitar
+                {t.common.remove}
               </button>
             </div>
           );
@@ -161,16 +163,16 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
       </div>
 
       <button type="button" className="button-secondary" onClick={addItem}>
-        Agregar linea
+        {t.sales.addLine}
       </button>
 
       <div className="card" style={{ padding: "1rem" }}>
-        <div className="muted">Total estimado</div>
+        <div className="muted">{t.sales.estimatedTotal}</div>
         <div className="metric-value">{formatCurrency(total)}</div>
       </div>
 
       <button className="button" type="submit" disabled={loading}>
-        {loading ? "Registrando..." : "Registrar venta"}
+        {loading ? t.sales.registering : t.sales.registerSale}
       </button>
     </form>
   );

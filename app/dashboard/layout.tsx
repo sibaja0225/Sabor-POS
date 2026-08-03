@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { getCurrentProfile } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { LanguageToggle } from "@/components/layout/language-toggle";
 
 export default async function DashboardLayout({
   children
@@ -19,7 +20,10 @@ export default async function DashboardLayout({
             <strong>{profile.full_name}</strong>
             <div className="muted">{profile.email}</div>
           </div>
-          <SignOutButton />
+          <div className="topbar-actions">
+            <LanguageToggle />
+            <SignOutButton />
+          </div>
         </div>
         {children}
       </main>
