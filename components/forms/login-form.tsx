@@ -60,6 +60,11 @@ export function LoginForm() {
       <Link className="button-secondary" href="/register">
         {t.auth.createAccount}
       </Link>
+      <p style={{ textAlign: "center", fontSize: "0.85rem", marginTop: "0.25rem" }}>
+        <Link href="/forgot-password" style={{ color: "var(--accent)" }}>
+          {t.auth.forgotPassword}
+        </Link>
+      </p>
     </form>
   );
 }

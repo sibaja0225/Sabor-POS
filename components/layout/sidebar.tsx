@@ -20,8 +20,10 @@ export function Sidebar({
     { href: "/dashboard/products", label: t.nav.products, icon: "▣" },
     { href: "/dashboard/inventory", label: t.nav.inventory, icon: "▤" },
     { href: "/dashboard/sales", label: t.nav.sales, icon: "◈" },
+    { href: "/dashboard/cash-register", label: t.nav.cashRegister, icon: "◻" },
     { href: "/dashboard/reports", label: t.nav.reports, icon: "◉" },
-    { href: "/dashboard/users", label: t.nav.users, icon: "◇" }
+    { href: "/dashboard/users", label: t.nav.users, icon: "◇" },
+    { href: "/dashboard/profile", label: t.nav.profile, icon: "◎" }
   ];
 
   return (
