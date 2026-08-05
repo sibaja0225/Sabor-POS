@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/context";
 
 type InvoiceActionsProps = {
   sale: {
@@ -14,6 +15,7 @@ type InvoiceActionsProps = {
 
 export function InvoiceActions({ sale }: InvoiceActionsProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [customerName, setCustomerName] = useState(sale.customer_name ?? "");
   const [paymentMethod, setPaymentMethod] = useState(sale.payment_method);
@@ -40,7 +42,7 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible actualizar la factura");
+      setError(result.error ?? t.sales.invoiceUpdateError);
       return;
     }
 
@@ -49,7 +51,7 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm(`¿Seguro que deseas eliminar la factura ${sale.invoice_number}?`);
+    const confirmed = window.confirm(`${t.sales.confirmDeleteInvoice} ${sale.invoice_number}?`);
 
     if (!confirmed) return;
 
@@ -64,7 +66,7 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible eliminar la factura");
+      setError(result.error ?? t.sales.invoiceDeleteError);
       return;
     }
 
@@ -79,20 +81,20 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
           <input
             value={customerName}
             onChange={(event) => setCustomerName(event.target.value)}
-            placeholder="Cliente"
+            placeholder={t.sales.customer}
           />
           <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="sinpe">SINPE</option>
-            <option value="mixto">Mixto</option>
+            <option value="efectivo">{t.sales.cash}</option>
+            <option value="tarjeta">{t.sales.card}</option>
+            <option value="sinpe">{t.sales.sinpe}</option>
+            <option value="mixto">{t.sales.mixed}</option>
           </select>
           <div className="table-actions">
             <button className="button" type="submit" disabled={loading}>
-              Guardar
+              {t.common.save}
             </button>
             <button className="button-secondary" type="button" onClick={() => setEditing(false)} disabled={loading}>
-              Cancelar
+              {t.common.cancel}
             </button>
           </div>
         </form>
@@ -104,10 +106,10 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
     <div className="table-actions">
       {error ? <div className="mini-error">{error}</div> : null}
       <button className="button-secondary" type="button" onClick={() => setEditing(true)} disabled={loading}>
-        Editar
+        {t.common.edit}
       </button>
       <button className="button-danger" type="button" onClick={handleDelete} disabled={loading}>
-        Eliminar
+        {t.common.delete}
       </button>
     </div>
   );

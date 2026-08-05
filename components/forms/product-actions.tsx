@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/context";
 
 type ProductActionsProps = {
   product: {
@@ -19,6 +20,7 @@ type ProductActionsProps = {
 
 export function ProductActions({ product }: ProductActionsProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -54,7 +56,7 @@ export function ProductActions({ product }: ProductActionsProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible actualizar el producto");
+      setError(result.error ?? t.products.updateError);
       return;
     }
 
@@ -63,7 +65,7 @@ export function ProductActions({ product }: ProductActionsProps) {
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm(`¿Seguro que deseas eliminar ${product.name}?`);
+    const confirmed = window.confirm(`${t.products.confirmDelete} ${product.name}?`);
     if (!confirmed) return;
 
     setLoading(true);
@@ -74,7 +76,7 @@ export function ProductActions({ product }: ProductActionsProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible eliminar el producto");
+      setError(result.error ?? t.products.deleteError);
       return;
     }
 
@@ -86,18 +88,18 @@ export function ProductActions({ product }: ProductActionsProps) {
       <div className="invoice-actions-panel">
         {error ? <div className="mini-error">{error}</div> : null}
         <form onSubmit={handleUpdate} className="invoice-edit-form">
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre" />
-          <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Categoria" />
-          <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="SKU" />
-          <input type="number" step="0.01" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} placeholder="Precio venta" />
-          <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="Stock" />
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t.products.name} />
+          <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder={t.products.category} />
+          <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder={t.products.sku} />
+          <input type="number" step="0.01" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} placeholder={t.products.salePrice} />
+          <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder={t.products.stock} />
           <select value={form.active ? "true" : "false"} onChange={(e) => setForm({ ...form, active: e.target.value === "true" })}>
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
+            <option value="true">{t.common.active}</option>
+            <option value="false">{t.common.inactive}</option>
           </select>
           <div className="table-actions">
-            <button className="button" type="submit" disabled={loading}>Guardar</button>
-            <button className="button-secondary" type="button" onClick={() => setEditing(false)} disabled={loading}>Cancelar</button>
+            <button className="button" type="submit" disabled={loading}>{t.common.save}</button>
+            <button className="button-secondary" type="button" onClick={() => setEditing(false)} disabled={loading}>{t.common.cancel}</button>
           </div>
         </form>
       </div>
@@ -107,8 +109,8 @@ export function ProductActions({ product }: ProductActionsProps) {
   return (
     <div className="table-actions">
       {error ? <div className="mini-error">{error}</div> : null}
-      <button className="button-secondary" type="button" onClick={() => setEditing(true)} disabled={loading}>Editar</button>
-      <button className="button-danger" type="button" onClick={handleDelete} disabled={loading}>Eliminar</button>
+      <button className="button-secondary" type="button" onClick={() => setEditing(true)} disabled={loading}>{t.common.edit}</button>
+      <button className="button-danger" type="button" onClick={handleDelete} disabled={loading}>{t.common.delete}</button>
     </div>
   );
 }
