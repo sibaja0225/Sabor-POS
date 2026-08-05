@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/context";
 
 type ProductOption = {
@@ -19,62 +19,67 @@ type LineItem = {
   quantity: number;
 };
 
+type LastSale = {
+  invoice_number: string;
+  customer_name: string;
+  payment_method: string;
+  subtotal: number;
+  discount_pct: number;
+  tax_pct: number;
+  total: number;
+  items: { name: string; qty: number; unit_price: number; subtotal: number }[];
+  date: string;
+};
+
 export function SaleForm({ products }: { products: ProductOption[] }) {
   const router = useRouter();
   const { t } = useLanguage();
   const [customerName, setCustomerName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("efectivo");
-  const [items, setItems] = useState<LineItem[]>([
-    {
-      product_id: products[0]?.id ?? "",
-      quantity: 1
-    }
-  ]);
+  const [discountPct, setDiscountPct] = useState(0);
+  const [taxPct, setTaxPct] = useState(13); // IVA CR por defecto
+  const [items, setItems] = useState<LineItem[]>([{ product_id: products[0]?.id ?? "", quantity: 1 }]);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastSale, setLastSale] = useState<LastSale | null>(null);
 
-  const total = useMemo(() => {
-    return items.reduce((sum, item) => {
-      const product = products.find((entry) => entry.id === item.product_id);
+  const { subtotal, discountAmt, taxAmt, total } = useMemo(() => {
+    const sub = items.reduce((sum, item) => {
+      const product = products.find((p) => p.id === item.product_id);
       return sum + (product?.sale_price ?? 0) * item.quantity;
     }, 0);
-  }, [items, products]);
+    const disc = sub * (discountPct / 100);
+    const afterDisc = sub - disc;
+    const tax = afterDisc * (taxPct / 100);
+    return { subtotal: sub, discountAmt: disc, taxAmt: tax, total: afterDisc + tax };
+  }, [items, products, discountPct, taxPct]);
 
   function updateItem(index: number, payload: Partial<LineItem>) {
-    setItems((current) =>
-      current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...payload } : item))
-    );
+    setItems((cur) => cur.map((item, i) => (i === index ? { ...item, ...payload } : item)));
   }
 
   function addItem() {
-    setItems((current) => [
-      ...current,
-      {
-        product_id: products[0]?.id ?? "",
-        quantity: 1
-      }
-    ]);
+    setItems((cur) => [...cur, { product_id: products[0]?.id ?? "", quantity: 1 }]);
   }
 
   function removeItem(index: number) {
-    setItems((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setItems((cur) => cur.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
-    setMessage("");
+    setLastSale(null);
 
     const response = await fetch("/api/sales", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         customer_name: customerName,
         payment_method: paymentMethod,
+        discount_pct: discountPct,
+        tax_pct: taxPct,
         items
       })
     });
@@ -87,22 +92,135 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
       return;
     }
 
-    setMessage(`${t.sales.saleOk} ${result.invoice_number ?? ""}`);
+    const saleItems = items.map((item) => {
+      const product = products.find((p) => p.id === item.product_id);
+      return {
+        name: product?.name ?? item.product_id,
+        qty: item.quantity,
+        unit_price: product?.sale_price ?? 0,
+        subtotal: (product?.sale_price ?? 0) * item.quantity
+      };
+    });
+
+    setLastSale({
+      invoice_number: result.invoice_number ?? "",
+      customer_name: customerName || t.common.finalConsumer,
+      payment_method: paymentMethod,
+      subtotal,
+      discount_pct: discountPct,
+      tax_pct: taxPct,
+      total,
+      items: saleItems,
+      date: new Date().toISOString()
+    });
+
     setCustomerName("");
     setPaymentMethod("efectivo");
-    setItems([
-      {
-        product_id: products[0]?.id ?? "",
-        quantity: 1
-      }
-    ]);
+    setDiscountPct(0);
+    setTaxPct(13);
+    setItems([{ product_id: products[0]?.id ?? "", quantity: 1 }]);
     router.refresh();
+  }
+
+  async function downloadPdf(sale: LastSale) {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "mm", format: "a5" });
+
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 16;
+
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Sabor POS", pageW / 2, y, { align: "center" });
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${t.invoice.invoiceNumber}${sale.invoice_number}`, pageW / 2, y, { align: "center" });
+    y += 5;
+    doc.text(`${t.invoice.date}: ${formatDate(sale.date)}`, pageW / 2, y, { align: "center" });
+    y += 8;
+
+    doc.setDrawColor(180);
+    doc.line(10, y, pageW - 10, y);
+    y += 5;
+
+    doc.setFont("helvetica", "bold");
+    doc.text(t.sales.customer + ":", 10, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(sale.customer_name, 45, y);
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text(t.sales.paymentMethod + ":", 10, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(sale.payment_method, 45, y);
+    y += 7;
+
+    doc.line(10, y, pageW - 10, y);
+    y += 5;
+
+    // Cabecera de líneas
+    doc.setFont("helvetica", "bold");
+    doc.text(t.products.product, 10, y);
+    doc.text(t.sales.quantity, 90, y, { align: "right" });
+    doc.text(t.invoice.unitPrice, 120, y, { align: "right" });
+    doc.text(t.invoice.subtotal, pageW - 10, y, { align: "right" });
+    y += 4;
+    doc.line(10, y, pageW - 10, y);
+    y += 5;
+
+    doc.setFont("helvetica", "normal");
+    for (const item of sale.items) {
+      doc.text(item.name.slice(0, 30), 10, y);
+      doc.text(String(item.qty), 90, y, { align: "right" });
+      doc.text(formatCurrency(item.unit_price), 120, y, { align: "right" });
+      doc.text(formatCurrency(item.subtotal), pageW - 10, y, { align: "right" });
+      y += 6;
+    }
+
+    y += 2;
+    doc.line(10, y, pageW - 10, y);
+    y += 5;
+
+    // Totales
+    const addTotalRow = (label: string, value: string, bold = false) => {
+      if (bold) doc.setFont("helvetica", "bold");
+      else doc.setFont("helvetica", "normal");
+      doc.text(label, pageW - 55, y);
+      doc.text(value, pageW - 10, y, { align: "right" });
+      y += 6;
+    };
+
+    addTotalRow(t.invoice.subtotal + ":", formatCurrency(sale.subtotal));
+    if (sale.discount_pct > 0) {
+      addTotalRow(`${t.invoice.discount} (${sale.discount_pct}%):`, `-${formatCurrency(sale.subtotal * sale.discount_pct / 100)}`);
+    }
+    if (sale.tax_pct > 0) {
+      addTotalRow(`${t.invoice.tax} (${sale.tax_pct}%):`, formatCurrency((sale.subtotal * (1 - sale.discount_pct / 100)) * sale.tax_pct / 100));
+    }
+    addTotalRow(t.invoice.total + ":", formatCurrency(sale.total), true);
+
+    doc.save(`factura-${sale.invoice_number}.pdf`);
   }
 
   return (
     <form onSubmit={handleSubmit} className="form-grid">
       {error ? <div className="alert alert-error">{error}</div> : null}
-      {message ? <div className="alert alert-success">{message}</div> : null}
+
+      {lastSale ? (
+        <div className="alert alert-success" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <strong>{t.sales.saleOk} {lastSale.invoice_number}</strong>
+          <button
+            type="button"
+            className="button-secondary"
+            onClick={() => downloadPdf(lastSale)}
+            style={{ alignSelf: "flex-start" }}
+          >
+            {t.invoice.downloadPdf}
+          </button>
+        </div>
+      ) : null}
+
       <div className="inline-actions">
         <div className="field">
           <label>{t.sales.customer}</label>
@@ -114,14 +232,14 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
             <option value="efectivo">{t.sales.cash}</option>
             <option value="sinpe">{t.sales.sinpe}</option>
             <option value="tarjeta">{t.sales.card}</option>
+            <option value="mixto">{t.sales.mixed}</option>
           </select>
         </div>
       </div>
 
       <div className="line-items">
         {items.map((item, index) => {
-          const selectedProduct = products.find((product) => product.id === item.product_id);
-
+          const selectedProduct = products.find((p) => p.id === item.product_id);
           return (
             <div className="line-item-row" key={`${item.product_id}-${index}`}>
               <div className="field">
@@ -131,9 +249,9 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
                   onChange={(e) => updateItem(index, { product_id: e.target.value })}
                   required
                 >
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} ({product.stock} {t.sales.inStock})
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.stock} {t.sales.inStock})
                     </option>
                   ))}
                 </select>
@@ -166,9 +284,52 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
         {t.sales.addLine}
       </button>
 
-      <div className="card" style={{ padding: "1rem" }}>
-        <div className="muted">{t.sales.estimatedTotal}</div>
-        <div className="metric-value">{formatCurrency(total)}</div>
+      {/* IVA y Descuento */}
+      <div className="invoice-totals">
+        <div className="invoice-totals-row">
+          <span>{t.invoice.subtotal}</span>
+          <span>{formatCurrency(subtotal)}</span>
+        </div>
+        <div className="invoice-totals-row">
+          <label htmlFor="discount-pct">{t.invoice.discountPct}</label>
+          <input
+            id="discount-pct"
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            value={discountPct}
+            onChange={(e) => setDiscountPct(Math.min(100, Math.max(0, Number(e.target.value))))}
+          />
+        </div>
+        {discountPct > 0 && (
+          <div className="invoice-totals-row">
+            <span>{t.invoice.discount}</span>
+            <span style={{ color: "var(--danger)" }}>-{formatCurrency(discountAmt)}</span>
+          </div>
+        )}
+        <div className="invoice-totals-row">
+          <label htmlFor="tax-pct">{t.invoice.taxPct}</label>
+          <input
+            id="tax-pct"
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            value={taxPct}
+            onChange={(e) => setTaxPct(Math.min(100, Math.max(0, Number(e.target.value))))}
+          />
+        </div>
+        {taxPct > 0 && (
+          <div className="invoice-totals-row">
+            <span>{t.invoice.tax} ({taxPct}%)</span>
+            <span>{formatCurrency(taxAmt)}</span>
+          </div>
+        )}
+        <div className="invoice-totals-row total-row">
+          <span>{t.invoice.total}</span>
+          <span>{formatCurrency(total)}</span>
+        </div>
       </div>
 
       <button className="button" type="submit" disabled={loading}>

@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
-import { canManageUsers, getCurrentProfile } from "@/lib/auth";
+import { canManageUsers, getProfileForApi } from "@/lib/auth";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile } = await getCurrentProfile();
+  const { supabase, profile } = await getProfileForApi();
+
+  if (!supabase || !profile) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
   const db = supabase as any;
 
   if (!canManageUsers(profile.role)) {

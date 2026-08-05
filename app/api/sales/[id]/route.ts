@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { canManageCatalog, getCurrentProfile } from "@/lib/auth";
+import { canManageCatalog, getProfileForApi } from "@/lib/auth";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile } = await getCurrentProfile();
-  const db = supabase as any;
+  const { supabase, profile } = await getProfileForApi();
+
+  if (!supabase || !profile) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
 
   if (!canManageCatalog(profile.role)) {
     return NextResponse.json({ error: "No tienes permiso para editar facturas" }, { status: 403 });
@@ -14,6 +17,7 @@ export async function PATCH(
 
   const body = await request.json();
   const { id } = await params;
+  const db = supabase as any;
 
   const payload = {
     customer_name: String(body.customer_name ?? "").trim() || null,
@@ -33,14 +37,18 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile, user } = await getCurrentProfile();
-  const db = supabase as any;
+  const { supabase, profile, user } = await getProfileForApi();
+
+  if (!supabase || !profile || !user) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
 
   if (!canManageCatalog(profile.role)) {
     return NextResponse.json({ error: "No tienes permiso para eliminar facturas" }, { status: 403 });
   }
 
   const { id } = await params;
+  const db = supabase as any;
 
   const { data: sale, error: saleError } = await db
     .from("sales")

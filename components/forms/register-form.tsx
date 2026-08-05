@@ -1,53 +1,57 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function RegisterForm() {
-  const router = useRouter();
   const { t } = useLanguage();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
 
-    // 1. Crea la cuenta ya confirmada desde el servidor (sin confirmacion por email).
     const response = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, fullName })
+      body: JSON.stringify({
+        email,
+        password,
+        fullName,
+        redirectOrigin: window.location.origin
+      })
     });
 
     const result = await response.json().catch(() => ({}));
+    setLoading(false);
 
     if (!response.ok) {
-      setLoading(false);
       setError(result.error ?? t.auth.registerError);
       return;
     }
 
-    // 2. Inicia sesion automaticamente y entra al panel.
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setSent(true);
+  }
 
-    setLoading(false);
-
-    if (signInError) {
-      router.replace("/login?success=" + encodeURIComponent(t.auth.accountCreated));
-      router.refresh();
-      return;
-    }
-
-    router.replace("/dashboard");
-    router.refresh();
+  if (sent) {
+    return (
+      <div className="form-grid">
+        <div className="alert alert-success">
+          <strong>{t.auth.checkYourEmail}</strong>
+          <p style={{ marginTop: "0.4rem" }}>{t.auth.confirmationSent} <strong>{email}</strong>.</p>
+        </div>
+        <Link href="/login" className="button" style={{ textAlign: "center" }}>
+          {t.auth.goToLogin}
+        </Link>
+      </div>
+    );
   }
 
   return (

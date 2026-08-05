@@ -640,3 +640,220 @@ th {
     justify-content: flex-start;
   }
 }
+
+/* ── Search / Filter / Pagination ──────────────────────────────── */
+.search-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.search-filter-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.65rem 0.9rem 0.65rem 2.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.filter-select {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.search-filter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.search-count {
+  font-size: 0.82rem;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  min-width: 36px;
+}
+
+.pagination-info {
+  font-size: 0.82rem;
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ── Facturación / IVA / PDF ──────────────────────────────────── */
+.invoice-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem;
+  background: var(--card-strong);
+  border-radius: 16px;
+  margin-top: 0.5rem;
+}
+
+.invoice-totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.invoice-totals-row.total-row {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  border-top: 1px solid var(--line);
+  padding-top: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.invoice-totals-row input[type="number"] {
+  width: 72px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+/* ── Cierre de caja ────────────────────────────────────────────── */
+.shift-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 16px;
+  background: var(--card-strong);
+  border: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.shift-status-banner.shift-open {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 10%, var(--card));
+}
+
+.shift-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.shift-badge.open {
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: var(--success);
+}
+
+.shift-badge.closed {
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  color: var(--muted);
+}
+
+.arqueo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 1.2rem;
+}
+
+.arqueo-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.arqueo-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.arqueo-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.arqueo-value.positive { color: var(--success); }
+.arqueo-value.negative { color: var(--danger); }
+
+/* ── Perfil / contraseña ───────────────────────────────────────── */
+.profile-card {
+  max-width: 480px;
+}
+
+@media (max-width: 480px) {
+  .arqueo-grid {
+    grid-template-columns: 1fr;
+  }
+}

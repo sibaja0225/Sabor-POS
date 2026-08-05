@@ -1,7 +1,6 @@
 import { getSalesData } from "@/lib/dashboard-data";
 import { SaleForm } from "@/components/forms/sale-form";
-import { InvoiceActions } from "@/components/forms/invoice-actions";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { SalesTable } from "@/components/tables/sales-table";
 import { getDictionary } from "@/lib/i18n/server";
 
 export default async function SalesPage() {
@@ -26,38 +25,7 @@ export default async function SalesPage() {
         </article>
         <article className="card">
           <h2>{t.sales.invoiceHistory}</h2>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t.sales.invoice}</th>
-                  <th>{t.sales.customer}</th>
-                  <th>{t.sales.payment}</th>
-                  <th>{t.common.total}</th>
-                  <th>{t.common.date}</th>
-                  <th>{t.common.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.length ? (
-                  sales.map((sale) => (
-                    <tr key={sale.id}>
-                      <td>{sale.invoice_number}</td>
-                      <td>{sale.customer_name ?? t.common.finalConsumer}</td>
-                      <td>{sale.payment_method}</td>
-                      <td>{formatCurrency(sale.total_amount)}</td>
-                      <td>{formatDate(sale.created_at)}</td>
-                      <td><InvoiceActions sale={sale} /></td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6}>{t.sales.noInvoices}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <SalesTable sales={sales} />
         </article>
       </div>
     </section>
