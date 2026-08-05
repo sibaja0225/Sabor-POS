@@ -48,6 +48,8 @@ const es = {
     haveAccount: "¿Ya tienes cuenta?",
     registerTitle: "Crea tu cuenta",
     registerSubtitle: "El primer usuario registrado quedará con rol administrador.",
+    registerError: "No fue posible crear la cuenta.",
+    accountCreated: "Cuenta creada. Ya puedes iniciar sesión.",
   },
   dashboard: {
     title: "Resumen general",
@@ -214,6 +216,8 @@ const en: typeof es = {
     haveAccount: "Already have an account?",
     registerTitle: "Create your account",
     registerSubtitle: "The first registered user will get the administrator role.",
+    registerError: "The account could not be created.",
+    accountCreated: "Account created. You can now sign in.",
   },
   dashboard: {
     title: "General overview",
