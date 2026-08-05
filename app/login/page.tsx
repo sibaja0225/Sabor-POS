@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/forms/login-form";
 import { LanguageToggle } from "@/components/layout/language-toggle";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { getDictionary } from "@/lib/i18n/server";
 
 export default async function LoginPage({
@@ -16,6 +17,7 @@ export default async function LoginPage({
       <section className="auth-card">
         <div className="auth-topbar">
           <LanguageToggle />
+          <ThemeToggle />
         </div>
 
         <div

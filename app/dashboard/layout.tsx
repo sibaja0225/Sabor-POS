@@ -3,6 +3,7 @@ import { getCurrentProfile } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { LanguageToggle } from "@/components/layout/language-toggle";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export default async function DashboardLayout({
   children
@@ -21,6 +22,7 @@ export default async function DashboardLayout({
             <div className="muted">{profile.email}</div>
           </div>
           <div className="topbar-actions">
+            <ThemeToggle />
             <LanguageToggle />
             <SignOutButton />
           </div>

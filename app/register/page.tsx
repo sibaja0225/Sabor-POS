@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RegisterForm } from "@/components/forms/register-form";
 import { LanguageToggle } from "@/components/layout/language-toggle";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { getDictionary } from "@/lib/i18n/server";
 
 export default async function RegisterPage({
@@ -16,6 +17,7 @@ export default async function RegisterPage({
       <section className="auth-card">
         <div className="auth-topbar">
           <LanguageToggle />
+          <ThemeToggle />
         </div>
         <h1>{t.auth.registerTitle}</h1>
         <p>{t.auth.registerSubtitle}</p>

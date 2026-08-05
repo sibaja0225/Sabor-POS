@@ -22,6 +22,8 @@ const es = {
     total: "Total",
     finalConsumer: "Consumidor final",
     language: "Idioma",
+    switchToDark: "Cambiar a modo oscuro",
+    switchToLight: "Cambiar a modo claro",
   },
   nav: {
     summary: "Resumen",
@@ -190,6 +192,8 @@ const en: typeof es = {
     total: "Total",
     finalConsumer: "Walk-in customer",
     language: "Language",
+    switchToDark: "Switch to dark mode",
+    switchToLight: "Switch to light mode",
   },
   nav: {
     summary: "Overview",
