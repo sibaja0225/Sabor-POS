@@ -63,6 +63,7 @@ body {
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -80,6 +81,7 @@ textarea {
 .auth-shell,
 .dashboard-shell {
   min-height: 100vh;
+  /* La grilla se define abajo junto al resto del layout */
 }
 
 .auth-shell {
@@ -189,10 +191,64 @@ textarea {
   display: grid;
   grid-template-columns: 270px 1fr;
   overflow-x: hidden;
+  position: relative;
 }
 
 .dashboard-shell > * {
   min-width: 0;
+}
+
+/* ── Hamburger button (solo visible en móvil) ─────────────────── */
+.hamburger-btn {
+  display: none;
+}
+
+/* ── Sidebar desktop ──────────────────────────────────────────── */
+.sidebar-desktop {
+  display: flex;
+}
+
+/* ── Sidebar móvil (drawer) ───────────────────────────────────── */
+.sidebar-mobile {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  z-index: 200;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.sidebar-mobile.sidebar-mobile-open {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Topbar izquierda ─────────────────────────────────────────── */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.hamburger-placeholder {
+  display: none;
+}
+
+.topbar-email {
+  font-size: 0.82rem;
 }
 
 .sidebar {
@@ -287,6 +343,10 @@ textarea {
 
 .main-content {
   padding: 1.6rem;
+  min-width: 0;
+  overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .topbar {
@@ -383,6 +443,7 @@ textarea {
 
 table {
   width: 100%;
+  min-width: 500px;
   border-collapse: collapse;
 }
 
@@ -517,18 +578,77 @@ th {
 }
 
 @media (max-width: 840px) {
+  /* Dashboard: grid de una sola columna, el sidebar desktop desaparece */
   .dashboard-shell {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    gap: 0.8rem;
+  .sidebar-desktop {
+    display: none;
   }
 
-  .sidebar footer {
-    margin-top: 0;
+  /* Activar sidebar móvil (drawer) */
+  .sidebar-mobile {
+    display: flex;
   }
 
+  .sidebar-overlay {
+    display: block;
+  }
+
+  /* Hamburger visible */
+  .hamburger-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    /* Posición fija en esquina superior izquierda para que siempre esté accesible */
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 210;
+    transition: background 0.18s ease;
+  }
+
+  .hamburger-btn:hover {
+    background: var(--card-strong);
+  }
+
+  /* El "placeholder" en el topbar ocupa el mismo espacio para no desviar el contenido */
+  .hamburger-placeholder {
+    display: block;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  /* Ajustes de topbar */
+  .topbar {
+    padding-top: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .topbar-left {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .topbar-card strong {
+    font-size: 0.9rem;
+  }
+
+  .topbar-email {
+    display: none;
+  }
+
+  /* Grids de una columna en móvil */
   .cards-grid,
   .two-columns,
   .three-columns,

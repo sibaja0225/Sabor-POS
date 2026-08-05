@@ -17,9 +17,13 @@ export default async function DashboardLayout({
       <Sidebar role={profile.role} name={profile.full_name} />
       <main className="main-content">
         <div className="topbar">
-          <div className="topbar-card">
-            <strong>{profile.full_name}</strong>
-            <div className="muted">{profile.email}</div>
+          <div className="topbar-left">
+            {/* Espacio reservado para el botón hamburguesa que se renderiza en Sidebar */}
+            <div className="hamburger-placeholder" aria-hidden="true" />
+            <div className="topbar-card">
+              <strong>{profile.full_name}</strong>
+              <div className="muted topbar-email">{profile.email}</div>
+            </div>
           </div>
           <div className="topbar-actions">
             <ThemeToggle />

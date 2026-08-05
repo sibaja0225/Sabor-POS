@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { classNames } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/context";
 
@@ -14,6 +15,19 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+
+  // Cerrar al cambiar de ruta
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Cerrar con Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   const links = [
     { href: "/dashboard", label: t.nav.summary, icon: "⌂" },
@@ -26,8 +40,8 @@ export function Sidebar({
     { href: "/dashboard/profile", label: t.nav.profile, icon: "◎" }
   ];
 
-  return (
-    <aside className="sidebar">
+  const nav = (
+    <>
       <div className="brand">
         <img src="/sabor-pos-logo.png" alt="Sabor POS" className="brand-logo" />
         <div>
@@ -51,6 +65,48 @@ export function Sidebar({
         <strong>{name}</strong>
         <div className="muted">{t.nav.role}: {role}</div>
       </footer>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Sidebar desktop — siempre visible */}
+      <aside className="sidebar sidebar-desktop">
+        {nav}
+      </aside>
+
+      {/* Botón hamburguesa — solo móvil */}
+      <button
+        className="hamburger-btn"
+        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? (
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <line x1="4" y1="4" x2="18" y2="18" />
+            <line x1="18" y1="4" x2="4" y2="18" />
+          </svg>
+        ) : (
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="19" y2="6" />
+            <line x1="3" y1="11" x2="19" y2="11" />
+            <line x1="3" y1="16" x2="19" y2="16" />
+          </svg>
+        )}
+      </button>
+
+      {/* Overlay + drawer móvil */}
+      {open && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={classNames("sidebar sidebar-mobile", open && "sidebar-mobile-open")}>
+        {nav}
+      </aside>
+    </>
   );
 }
