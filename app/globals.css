@@ -713,6 +713,136 @@ th {
   margin-bottom: 1rem;
 }
 
+/* ── Auth brand (logo + nombre) ────────────────────────────────── */
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo {
+  width: 72px;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.auth-brand h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+}
+
+/* ── Ícono de éxito en pantallas de confirmación ────────────────── */
+.auth-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  margin: 0 auto 0.25rem;
+}
+
+/* ── Sección encabezado dentro del formulario ───────────────────── */
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.25rem;
+}
+
+/* ── Layout de perfil ───────────────────────────────────────────── */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.profile-identity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.profile-identity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.profile-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.profile-email {
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 640px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-identity-card {
+    flex-direction: row;
+    text-align: left;
+    padding: 1.25rem;
+  }
+
+  .profile-identity-info {
+    align-items: flex-start;
+  }
+
+  .auth-brand h1 {
+    font-size: 1.25rem;
+  }
+
+  .auth-logo {
+    width: 54px;
+    height: 60px;
+  }
+}
+
 .theme-toggle {
   border: 1px solid var(--line);
   background: var(--card);
@@ -862,7 +992,7 @@ th {
   text-align: center;
 }
 
-/* ── Facturación / IVA / PDF ──────────────────────────────────── */
+/* ── Facturación / IVA / PDF ──────────��───────────────────────── */
 .invoice-totals {
   display: flex;
   flex-direction: column;

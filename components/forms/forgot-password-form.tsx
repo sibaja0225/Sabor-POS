@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/context";
-import Link from "next/link";
 
 export function ForgotPasswordForm() {
   const { t } = useLanguage();
@@ -29,43 +28,55 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="auth-card" style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>✉</div>
-        <h1 className="auth-title">{a.resetLinkSent}</h1>
-        <p className="muted" style={{ margin: "0.5rem 0 1.5rem" }}>{a.confirmationSent} <strong>{email}</strong></p>
-        <Link href="/login" className="button button-secondary" style={{ display: "inline-block" }}>
-          {a.goToLogin}
-        </Link>
+      <div className="form-grid">
+        <div className="auth-success-icon" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </div>
+        <div>
+          <p style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.35rem" }}>{a.checkYourEmail}</p>
+          <p className="muted" style={{ fontSize: "0.92rem" }}>
+            {a.confirmationSent} <strong>{email}</strong>
+          </p>
+        </div>
+        <div className="alert alert-success" style={{ fontSize: "0.9rem" }}>
+          {a.resetLinkSent}
+        </div>
       </div>
     );
   }
 
   return (
-    <form className="auth-card" onSubmit={handleSubmit} noValidate>
-      <h1 className="auth-title">{a.forgotPasswordTitle}</h1>
-      <p className="auth-subtitle">{a.forgotPasswordSubtitle}</p>
+    <form onSubmit={handleSubmit} className="form-grid" noValidate>
+      <div>
+        <p style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.3rem" }}>
+          {a.forgotPasswordTitle}
+        </p>
+        <p className="muted" style={{ fontSize: "0.9rem" }}>
+          {a.forgotPasswordSubtitle}
+        </p>
+      </div>
 
-      {error && <p className="form-error">{error}</p>}
+      {error && <div className="alert alert-error">{error}</div>}
 
-      <div className="form-field">
-        <label className="form-label">{t.auth.email}</label>
+      <div className="field">
+        <label htmlFor="forgot-email">{a.email}</label>
         <input
+          id="forgot-email"
           type="email"
-          className="form-input"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
+          placeholder="correo@ejemplo.com"
         />
       </div>
 
-      <button type="submit" className="button button-primary" disabled={loading} style={{ width: "100%", marginTop: "0.5rem" }}>
+      <button type="submit" className="button" disabled={loading} style={{ width: "100%" }}>
         {loading ? a.sendingLink : a.sendResetLink}
       </button>
-
-      <p className="auth-footer">
-        <Link href="/login">{a.goToLogin}</Link>
-      </p>
     </form>
   );
 }
