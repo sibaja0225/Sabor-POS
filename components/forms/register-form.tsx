@@ -19,27 +19,34 @@ export function RegisterForm() {
     setLoading(true);
     setError("");
 
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName
-        },
-        emailRedirectTo:
-          typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
-      }
+    // 1. Crea la cuenta ya confirmada desde el servidor (sin confirmacion por email).
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, fullName })
     });
 
-    setLoading(false);
+    const result = await response.json().catch(() => ({}));
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (!response.ok) {
+      setLoading(false);
+      setError(result.error ?? t.auth.registerError);
       return;
     }
 
-    router.replace("/login?success=Cuenta%20creada.%20Revisa%20tu%20correo%20si%20tu%20proyecto%20requiere%20confirmacion");
+    // 2. Inicia sesion automaticamente y entra al panel.
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+    setLoading(false);
+
+    if (signInError) {
+      router.replace("/login?success=" + encodeURIComponent(t.auth.accountCreated));
+      router.refresh();
+      return;
+    }
+
+    router.replace("/dashboard");
     router.refresh();
   }
 
