@@ -13,7 +13,25 @@ export async function GET() {
     .limit(50);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+
+  const shifts = (data ?? []) as Array<Record<string, any>>;
+  const active = shifts.find((s) => s.status === "open");
+
+  // Calcular ventas del turno activo del usuario actual (mismo criterio que close_shift)
+  if (active) {
+    const { data: sales } = await db
+      .from("sales")
+      .select("total_amount")
+      .eq("created_by", active.opened_by)
+      .gte("created_at", active.opened_at);
+
+    const rows = (sales ?? []) as Array<{ total_amount: number }>;
+    active.sales_count = rows.length;
+    active.sales_total = rows.reduce((sum, r) => sum + Number(r.total_amount), 0);
+    active.expected_now = Number(active.opening_balance) + active.sales_total;
+  }
+
+  return NextResponse.json(shifts);
 }
 
 export async function POST(request: Request) {

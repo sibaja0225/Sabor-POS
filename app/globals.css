@@ -1069,33 +1069,126 @@ th {
   color: var(--muted);
 }
 
-.arqueo-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem 1.2rem;
+.shift-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.shift-status-meta {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Tarjeta métrica destacada (efectivo esperado) */
+.metric-card-accent {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+/* Formulario apilado reutilizable */
+.stacked-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+/* Vista previa del arqueo dentro del formulario de cierre */
+.arqueo-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: var(--card-strong);
+  border: 1px solid var(--line);
 }
 
 .arqueo-row {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.arqueo-label {
-  font-size: 0.78rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
-.arqueo-value {
-  font-size: 1.05rem;
-  font-weight: 700;
+.arqueo-row span:last-child {
+  font-weight: 600;
   color: var(--text);
 }
 
-.arqueo-value.positive { color: var(--success); }
-.arqueo-value.negative { color: var(--danger); }
+.arqueo-row-total {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+  font-size: 1rem;
+}
+
+.arqueo-row .positive { color: var(--success); }
+.arqueo-row .negative { color: var(--danger); }
+
+/* Lista de detalles del turno activo */
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.92rem;
+}
+
+.detail-row span:last-child {
+  font-weight: 600;
+  text-align: right;
+}
+
+.detail-row-total {
+  margin-top: 0.3rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.detail-row-total span:last-child {
+  color: var(--accent);
+}
+
+/* Diferencia en el historial */
+.arqueo-diff {
+  display: inline-flex;
+  flex-direction: column;
+  font-weight: 700;
+}
+
+.arqueo-diff.positive { color: var(--success); }
+.arqueo-diff.negative { color: var(--danger); }
+
+.arqueo-diff-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.8;
+}
+
+.notes-cell {
+  max-width: 220px;
+  font-size: 0.88rem;
+}
 
 /* ── Perfil / contraseña ───────────────────────────────────────── */
 .profile-card {

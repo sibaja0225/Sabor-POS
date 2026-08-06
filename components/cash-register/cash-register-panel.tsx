@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useLanguage } from "@/lib/i18n/context";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -16,6 +16,9 @@ interface Shift {
   notes: string | null;
   opener?: { full_name: string } | null;
   closer?: { full_name: string } | null;
+  sales_count?: number;
+  sales_total?: number;
+  expected_now?: number;
 }
 
 interface Props {
@@ -40,6 +43,11 @@ export function CashRegisterPanel({ initialShifts }: Props) {
     if (res.ok) setShifts(await res.json());
   }, []);
 
+  // Al montar, recargamos para obtener las estadísticas de ventas del turno activo
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
   async function handleOpen(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -51,7 +59,10 @@ export function CashRegisterPanel({ initialShifts }: Props) {
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? cr.openError); return; }
+    if (!res.ok) {
+      setError(data.error ?? cr.openError);
+      return;
+    }
     setOpeningBalance("");
     await reload();
   }
@@ -68,7 +79,10 @@ export function CashRegisterPanel({ initialShifts }: Props) {
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? cr.closeError); return; }
+    if (!res.ok) {
+      setError(data.error ?? cr.closeError);
+      return;
+    }
     setClosingBalance("");
     setNotes("");
     await reload();
@@ -81,91 +95,130 @@ export function CashRegisterPanel({ initialShifts }: Props) {
     return "";
   };
 
-  return (
-    <div className="main-content">
-      <div className="page-header">
-        <div>
-          <h1>{cr.title}</h1>
-          <p className="muted">{cr.subtitle}</p>
-        </div>
-      </div>
+  const diffLabel = (d: number | null) => {
+    if (d === null) return "";
+    if (d > 0) return cr.surplus;
+    if (d < 0) return cr.shortage;
+    return cr.balanced;
+  };
 
-      {error && <p className="form-error" style={{ marginBottom: "1rem" }}>{error}</p>}
+  return (
+    <section className="page-grid">
+      <header className="page-header">
+        <h1>{cr.title}</h1>
+        <p>{cr.subtitle}</p>
+      </header>
+
+      {error ? <div className="alert alert-error">{error}</div> : null}
 
       {/* Estado actual del turno */}
-      <div className={`shift-status-banner${activeShift ? " shift-open" : ""}`} style={{ marginBottom: "1.5rem" }}>
-        <div>
+      <div className={`shift-status-banner${activeShift ? " shift-open" : ""}`}>
+        <div className="shift-status-info">
           <span className={`shift-badge ${activeShift ? "open" : "closed"}`}>
             {activeShift ? cr.open : cr.noActiveShift}
           </span>
-          {activeShift && (
-            <p className="muted" style={{ fontSize: "0.85rem", marginTop: "0.3rem" }}>
+          {activeShift ? (
+            <p className="muted shift-status-meta">
               {cr.openedAt} {formatDate(activeShift.opened_at)}
               {activeShift.opener ? ` — ${cr.by} ${activeShift.opener.full_name}` : ""}
             </p>
+          ) : (
+            <p className="muted shift-status-meta">{cr.openPrompt}</p>
           )}
         </div>
-        {activeShift && (
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <div>
-              <div className="arqueo-label">{cr.openingBalance}</div>
-              <div className="arqueo-value">{formatCurrency(activeShift.opening_balance)}</div>
-            </div>
-          </div>
-        )}
       </div>
 
-      <div className="two-columns" style={{ gap: "1.5rem", marginBottom: "2rem" }}>
+      {/* Resumen de ventas del turno activo */}
+      {activeShift ? (
+        <div className="cards-grid">
+          <article className="card metric-card">
+            <span className="metric-label">{cr.openingBalance}</span>
+            <strong className="metric-value">{formatCurrency(activeShift.opening_balance)}</strong>
+          </article>
+          <article className="card metric-card">
+            <span className="metric-label">{cr.salesCount}</span>
+            <strong className="metric-value">{activeShift.sales_count ?? 0}</strong>
+          </article>
+          <article className="card metric-card">
+            <span className="metric-label">{cr.salesTotal}</span>
+            <strong className="metric-value">{formatCurrency(activeShift.sales_total ?? 0)}</strong>
+          </article>
+          <article className="card metric-card metric-card-accent">
+            <span className="metric-label">{cr.expectedCash}</span>
+            <strong className="metric-value">
+              {formatCurrency(activeShift.expected_now ?? activeShift.opening_balance)}
+            </strong>
+          </article>
+        </div>
+      ) : null}
+
+      <div className="two-columns">
         {/* Abrir turno */}
-        {!activeShift && (
+        {!activeShift ? (
           <article className="card">
             <h2>{cr.openShift}</h2>
-            <form onSubmit={handleOpen} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
-              <div className="form-field">
-                <label className="form-label">{cr.openingBalance}</label>
+            <form onSubmit={handleOpen} className="stacked-form">
+              <div className="field">
+                <label>{cr.openingBalance}</label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  className="form-input"
                   value={openingBalance}
                   onChange={(e) => setOpeningBalance(e.target.value)}
+                  placeholder="0.00"
                   required
                 />
+                <span className="field-hint">{cr.openingHint}</span>
               </div>
-              <button type="submit" className="button button-primary" disabled={loading}>
+              <button type="submit" className="button" disabled={loading}>
                 {loading ? cr.opening : cr.openShiftBtn}
               </button>
             </form>
           </article>
-        )}
-
-        {/* Cerrar turno */}
-        {activeShift && (
+        ) : (
+          /* Cerrar turno */
           <article className="card">
             <h2>{cr.closeShift}</h2>
-            <form onSubmit={handleClose} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
-              <div className="form-field">
-                <label className="form-label">{cr.closingBalance}</label>
+            <form onSubmit={handleClose} className="stacked-form">
+              <div className="field">
+                <label>{cr.closingBalance}</label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  className="form-input"
                   value={closingBalance}
                   onChange={(e) => setClosingBalance(e.target.value)}
+                  placeholder="0.00"
                   required
                 />
+                <span className="field-hint">{cr.closingHint}</span>
               </div>
-              <div className="form-field">
-                <label className="form-label">Notas (opcional)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
+              <div className="field">
+                <label>{cr.notes}</label>
+                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={cr.notesPlaceholder} />
               </div>
+
+              {/* Vista previa del arqueo */}
+              {closingBalance !== "" ? (
+                <div className="arqueo-preview">
+                  <div className="arqueo-row">
+                    <span>{cr.expectedCash}</span>
+                    <span>{formatCurrency(activeShift.expected_now ?? activeShift.opening_balance)}</span>
+                  </div>
+                  <div className="arqueo-row">
+                    <span>{cr.actualCash}</span>
+                    <span>{formatCurrency(Number(closingBalance))}</span>
+                  </div>
+                  <div className="arqueo-row arqueo-row-total">
+                    <span>{cr.difference}</span>
+                    <span className={diffClass(Number(closingBalance) - (activeShift.expected_now ?? activeShift.opening_balance))}>
+                      {formatCurrency(Number(closingBalance) - (activeShift.expected_now ?? activeShift.opening_balance))}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
               <button type="submit" className="button button-danger" disabled={loading}>
                 {loading ? cr.closing : cr.closeShiftBtn}
               </button>
@@ -173,22 +226,40 @@ export function CashRegisterPanel({ initialShifts }: Props) {
           </article>
         )}
 
-        {/* Resumen del turno activo */}
-        {activeShift && (
+        {/* Información del turno activo */}
+        {activeShift ? (
           <article className="card">
             <h2>{cr.activeShift}</h2>
-            <div className="arqueo-grid" style={{ marginTop: "1rem" }}>
-              <div className="arqueo-row">
-                <span className="arqueo-label">{cr.openingBalance}</span>
-                <span className="arqueo-value">{formatCurrency(activeShift.opening_balance)}</span>
+            <div className="detail-list">
+              <div className="detail-row">
+                <span className="muted">{cr.openedAt}</span>
+                <span>{formatDate(activeShift.opened_at)}</span>
               </div>
-              <div className="arqueo-row">
-                <span className="arqueo-label">{cr.openedAt}</span>
-                <span className="arqueo-value" style={{ fontSize: "0.9rem" }}>{formatDate(activeShift.opened_at)}</span>
+              {activeShift.opener ? (
+                <div className="detail-row">
+                  <span className="muted">{cr.openedBy}</span>
+                  <span>{activeShift.opener.full_name}</span>
+                </div>
+              ) : null}
+              <div className="detail-row">
+                <span className="muted">{cr.openingBalance}</span>
+                <span>{formatCurrency(activeShift.opening_balance)}</span>
+              </div>
+              <div className="detail-row">
+                <span className="muted">{cr.salesCount}</span>
+                <span>{activeShift.sales_count ?? 0}</span>
+              </div>
+              <div className="detail-row">
+                <span className="muted">{cr.salesTotal}</span>
+                <span>{formatCurrency(activeShift.sales_total ?? 0)}</span>
+              </div>
+              <div className="detail-row detail-row-total">
+                <span>{cr.expectedCash}</span>
+                <span>{formatCurrency(activeShift.expected_now ?? activeShift.opening_balance)}</span>
               </div>
             </div>
           </article>
-        )}
+        ) : null}
       </div>
 
       {/* Historial */}
@@ -206,7 +277,7 @@ export function CashRegisterPanel({ initialShifts }: Props) {
                   <th>{cr.expectedCash}</th>
                   <th>{cr.actualCash}</th>
                   <th>{cr.difference}</th>
-                  <th>{cr.status}</th>
+                  <th>{cr.notes}</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,16 +288,14 @@ export function CashRegisterPanel({ initialShifts }: Props) {
                     <td>{s.expected_cash !== null ? formatCurrency(s.expected_cash) : "—"}</td>
                     <td>{s.closing_balance !== null ? formatCurrency(s.closing_balance) : "—"}</td>
                     <td>
-                      <span className={`arqueo-value ${diffClass(s.difference)}`} style={{ fontSize: "0.95rem" }}>
-                        {s.difference !== null ? formatCurrency(Math.abs(s.difference)) : "—"}
-                        {s.difference !== null && s.difference > 0 && <span style={{ marginLeft: "0.3rem", fontSize: "0.75rem" }}>{cr.surplus}</span>}
-                        {s.difference !== null && s.difference < 0 && <span style={{ marginLeft: "0.3rem", fontSize: "0.75rem" }}>{cr.shortage}</span>}
-                        {s.difference === 0 && <span style={{ marginLeft: "0.3rem", fontSize: "0.75rem" }}>{cr.balanced}</span>}
+                      <span className={`arqueo-diff ${diffClass(s.difference)}`}>
+                        {s.difference !== null ? formatCurrency(s.difference) : "—"}
+                        {s.difference !== null ? (
+                          <small className="arqueo-diff-label">{diffLabel(s.difference)}</small>
+                        ) : null}
                       </span>
                     </td>
-                    <td>
-                      <span className="status-badge status-neutral">{cr.closed}</span>
-                    </td>
+                    <td className="notes-cell">{s.notes ? s.notes : <span className="muted">—</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -234,6 +303,6 @@ export function CashRegisterPanel({ initialShifts }: Props) {
           </div>
         )}
       </article>
-    </div>
+    </section>
   );
 }
