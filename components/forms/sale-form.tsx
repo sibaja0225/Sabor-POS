@@ -2,8 +2,9 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/context";
+import { downloadInvoicePdf, printInvoicePdf, type InvoiceData, type InvoiceLabels } from "@/lib/invoice-pdf";
 
 type ProductOption = {
   id: string;
@@ -122,102 +123,44 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
     router.refresh();
   }
 
-  async function downloadPdf(sale: LastSale) {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a5" });
-
-    const pageW = doc.internal.pageSize.getWidth();
-    let y = 16;
-
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Sabor POS", pageW / 2, y, { align: "center" });
-    y += 8;
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${t.invoice.invoiceNumber}${sale.invoice_number}`, pageW / 2, y, { align: "center" });
-    y += 5;
-    doc.text(`${t.invoice.date}: ${formatDate(sale.date)}`, pageW / 2, y, { align: "center" });
-    y += 8;
-
-    doc.setDrawColor(180);
-    doc.line(10, y, pageW - 10, y);
-    y += 5;
-
-    doc.setFont("helvetica", "bold");
-    doc.text(t.sales.customer + ":", 10, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(sale.customer_name, 45, y);
-    y += 5;
-    doc.setFont("helvetica", "bold");
-    doc.text(t.sales.paymentMethod + ":", 10, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(sale.payment_method, 45, y);
-    y += 7;
-
-    doc.line(10, y, pageW - 10, y);
-    y += 5;
-
-    // Cabecera de líneas
-    doc.setFont("helvetica", "bold");
-    doc.text(t.products.product, 10, y);
-    doc.text(t.sales.quantity, 90, y, { align: "right" });
-    doc.text(t.invoice.unitPrice, 120, y, { align: "right" });
-    doc.text(t.invoice.subtotal, pageW - 10, y, { align: "right" });
-    y += 4;
-    doc.line(10, y, pageW - 10, y);
-    y += 5;
-
-    doc.setFont("helvetica", "normal");
-    for (const item of sale.items) {
-      doc.text(item.name.slice(0, 30), 10, y);
-      doc.text(String(item.qty), 90, y, { align: "right" });
-      doc.text(formatCurrency(item.unit_price), 120, y, { align: "right" });
-      doc.text(formatCurrency(item.subtotal), pageW - 10, y, { align: "right" });
-      y += 6;
-    }
-
-    y += 2;
-    doc.line(10, y, pageW - 10, y);
-    y += 5;
-
-    // Totales
-    const addTotalRow = (label: string, value: string, bold = false) => {
-      if (bold) doc.setFont("helvetica", "bold");
-      else doc.setFont("helvetica", "normal");
-      doc.text(label, pageW - 55, y);
-      doc.text(value, pageW - 10, y, { align: "right" });
-      y += 6;
-    };
-
-    addTotalRow(t.invoice.subtotal + ":", formatCurrency(sale.subtotal));
-    if (sale.discount_pct > 0) {
-      addTotalRow(`${t.invoice.discount} (${sale.discount_pct}%):`, `-${formatCurrency(sale.subtotal * sale.discount_pct / 100)}`);
-    }
-    if (sale.tax_pct > 0) {
-      addTotalRow(`${t.invoice.tax} (${sale.tax_pct}%):`, formatCurrency((sale.subtotal * (1 - sale.discount_pct / 100)) * sale.tax_pct / 100));
-    }
-    addTotalRow(t.invoice.total + ":", formatCurrency(sale.total), true);
-
-    doc.save(`factura-${sale.invoice_number}.pdf`);
-  }
+  const invoiceLabels: InvoiceLabels = {
+    invoiceNumber: t.invoice.invoiceNumber,
+    date: t.invoice.date,
+    seller: t.invoice.seller,
+    customer: t.sales.customer,
+    paymentMethod: t.sales.paymentMethod,
+    product: t.products.product,
+    quantity: t.sales.quantity,
+    unitPrice: t.invoice.unitPrice,
+    subtotal: t.invoice.subtotal,
+    discount: t.invoice.discount,
+    tax: t.invoice.tax,
+    total: t.invoice.total
+  };
 
   return (
     <form onSubmit={handleSubmit} className="form-grid">
       {error ? <div className="alert alert-error">{error}</div> : null}
 
       {lastSale ? (
-        <div className="alert alert-success" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div className="alert alert-success" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <strong>{t.sales.saleOk} {lastSale.invoice_number}</strong>
-          <button
-            type="button"
-            className="button-secondary"
-            onClick={() => downloadPdf(lastSale)}
-            style={{ alignSelf: "flex-start" }}
-          >
-            {t.invoice.downloadPdf}
-          </button>
+          <div className="table-actions">
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => downloadInvoicePdf(lastSale as InvoiceData, invoiceLabels)}
+            >
+              {t.invoice.downloadPdf}
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => printInvoicePdf(lastSale as InvoiceData, invoiceLabels)}
+            >
+              {t.invoice.printInvoice}
+            </button>
+          </div>
         </div>
       ) : null}
 
