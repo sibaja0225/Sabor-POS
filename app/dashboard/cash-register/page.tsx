@@ -12,7 +12,7 @@ export default async function CashRegisterPage() {
 
   const { data: shifts } = await db
     .from("cash_shifts")
-    .select("*, opener:opened_by(full_name), closer:closed_by(full_name)")
+    .select("*")
     .order("opened_at", { ascending: false })
     .limit(50);
 

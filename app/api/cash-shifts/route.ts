@@ -8,13 +8,35 @@ export async function GET() {
 
   const { data, error } = await db
     .from("cash_shifts")
-    .select("*, opener:opened_by(full_name), closer:closed_by(full_name)")
+    .select("*")
     .order("opened_at", { ascending: false })
     .limit(50);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const shifts = (data ?? []) as Array<Record<string, any>>;
+
+  // Traer nombres de perfil por separado (no hay FK directa a public.profiles para el join embebido)
+  const userIds = Array.from(
+    new Set(shifts.flatMap((s) => [s.opened_by, s.closed_by]).filter(Boolean))
+  );
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await db
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", userIds);
+
+    const nameById = new Map(
+      ((profiles ?? []) as Array<{ id: string; full_name: string }>).map((p) => [p.id, p.full_name])
+    );
+
+    for (const s of shifts) {
+      s.opener = s.opened_by ? { full_name: nameById.get(s.opened_by) ?? "—" } : null;
+      s.closer = s.closed_by ? { full_name: nameById.get(s.closed_by) ?? "—" } : null;
+    }
+  }
+
   const active = shifts.find((s) => s.status === "open");
 
   // Calcular ventas del turno activo del usuario actual (mismo criterio que close_shift)
