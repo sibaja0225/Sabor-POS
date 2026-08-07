@@ -108,19 +108,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   const margin = 10;
   let y = 12;
 
-  // Simple layout from the original invoice: logo centered, clean black text, CRC amounts.
-  const logo = new Image();
-  logo.crossOrigin = "anonymous";
-  logo.src = "/sabor-pos-logo.png";
-  await new Promise<void>((resolve) => {
-    logo.onload = () => resolve();
-    logo.onerror = () => resolve();
-  });
-  if (logo.complete && logo.naturalWidth > 0) {
-    doc.addImage(logo, "PNG", pageW / 2 - 13, y, 26, 28);
-    y += 27;
-  }
-
+  // Keep the invoice logo-free; the original site logo remains unchanged.
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
