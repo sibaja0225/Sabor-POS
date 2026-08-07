@@ -11,13 +11,6 @@ export const metadata: Metadata = {
   description: "El sabor de administrar tu negocio fácilmente."
 };
 
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover" as const,
-  themeColor: "#111827"
-};
-
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const [locale, theme] = await Promise.all([getLocale(), getTheme()]);
 
