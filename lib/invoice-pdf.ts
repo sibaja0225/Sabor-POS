@@ -90,11 +90,18 @@ function moneyText(value: number) {
   return Number(value ?? 0).toFixed(2);
 }
 
-function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
+function drawMoney(
+  doc: any,
+  value: number,
+  x: number,
+  y: number,
+  align: "left" | "right" = "left",
+  includeCurrencyCode = false
+) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.2);
   doc.setTextColor(0, 0, 0);
-  doc.text(`CRC ${moneyText(value)}`, x, y, { align });
+  doc.text(`${includeCurrencyCode ? "CRC " : ""}${moneyText(value)}`, x, y, { align });
 }
 
 function addText(doc: any, text: string, x: number, y: number, options: Record<string, unknown> = {}) {
@@ -164,9 +171,9 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   addText(doc, pdfLabel(l.product), margin + 4, y + 5.2);
-  addText(doc, "Cant.", 84, y + 5.2, { align: "right" });
-  addText(doc, "Precio", 108, y + 5.2, { align: "right" });
-  addText(doc, "Subtotal", pageW - margin, y + 5.2, { align: "right" });
+  addText(doc, "Cant.", 82, y + 5.2, { align: "center" });
+  addText(doc, "Precio", 100, y + 5.2, { align: "center" });
+  addText(doc, "Subtotal", pageW - margin, y + 5.2, { align: "center" });
   y += 13;
 
   doc.setTextColor(...COLORS.ink);
@@ -179,7 +186,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
     }
     addText(doc, item.name.slice(0, 28), margin + 4, y);
     addText(doc, String(item.qty), 84, y, { align: "right" });
-    drawMoney(doc, item.unit_price, 110, y, "right");
+    drawMoney(doc, item.unit_price, 100, y, "right");
     drawMoney(doc, item.subtotal, pageW - margin, y, "right");
     y += 7;
   }
@@ -195,7 +202,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
     doc.setFont("helvetica", bold ? "bold" : "normal");
     doc.setFontSize(bold ? 11 : 8.5);
     addText(doc, pdfLabel(label), pageW - 57, y);
-    drawMoney(doc, value, pageW - margin - 4, y, "right");
+    drawMoney(doc, value, pageW - margin, y, "right", true);
     y += bold ? 8 : 6;
   };
 
