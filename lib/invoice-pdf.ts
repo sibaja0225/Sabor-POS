@@ -14,7 +14,6 @@ export type InvoiceData = {
   date: string;
 };
 
-// Etiquetas necesarias para el PDF (se pasan desde el diccionario i18n activo)
 export type InvoiceLabels = {
   invoiceNumber: string;
   date: string;
@@ -30,162 +29,206 @@ export type InvoiceLabels = {
   total: string;
 };
 
-// Use a bundled Unicode font so the Costa Rican colon and Spanish accents render correctly.
-async function loadPdfFont(doc: { addFileToVFS: Function; addFont: Function; setFont: Function }) {
-  const response = await fetch("/fonts/noto-sans-regular.ttf");
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  const base64 = btoa(binary);
-
-  doc.addFileToVFS("NotoSans-Regular.ttf", base64);
-  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
-  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "bold");
-  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "italic");
-  doc.setFont("NotoSans", "normal");
-}
+const COLORS = {
+  navy: [32, 42, 120] as [number, number, number],
+  blue: [25, 118, 210] as [number, number, number],
+  teal: [22, 181, 196] as [number, number, number],
+  ink: [34, 42, 58] as [number, number, number],
+  muted: [100, 112, 130] as [number, number, number],
+  line: [220, 225, 235] as [number, number, number],
+  soft: [244, 247, 252] as [number, number, number]
+};
 
 function pdfText(value: string | number) {
-  return String(value).replace(/·/g, "-");
-}
-
-function pdfCurrency(value: number) {
-  return `₡ ${pdfText(formatCurrency(value)).replace(/^\s+/, "")}`;
+  return String(value).replace(/[·¡¿]/g, "-");
 }
 
 function pdfLabel(value: string) {
   return pdfText(value).replace(/\?+$/g, "");
 }
 
+function drawBrandMark(doc: any, x: number, y: number, size: number) {
+  doc.setFillColor(...COLORS.blue);
+  doc.roundedRect(x, y + size * 0.68, size, size * 0.16, size * 0.06, "F");
+  doc.setDrawColor(...COLORS.navy);
+  doc.setLineWidth(size * 0.06);
+  doc.arc(x + size * 0.5, y + size * 0.68, size * 0.34, 180, 345);
+  doc.setDrawColor(...COLORS.teal);
+  doc.setLineWidth(size * 0.08);
+  doc.line(x + size * 0.36, y + size * 0.55, x + size * 0.48, y + size * 0.67);
+  doc.line(x + size * 0.48, y + size * 0.67, x + size * 0.77, y + size * 0.34);
+  doc.setFillColor(...COLORS.teal);
+  doc.circle(x + size * 0.5, y + size * 0.28, size * 0.07, "F");
+}
+
+function drawColonSymbol(doc: any, x: number, y: number, size = 2.8) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(size * 2.5);
+  doc.setTextColor(...COLORS.navy);
+  doc.text("C", x, y);
+  doc.setDrawColor(...COLORS.teal);
+  doc.setLineWidth(0.35);
+  doc.line(x + size * 0.85, y - size * 1.8, x + size * 0.85, y + size * 0.3);
+  doc.line(x + size * 1.15, y - size * 1.8, x + size * 1.15, y + size * 0.3);
+}
+
+function moneyText(value: number) {
+  return pdfText(formatCurrency(value)).replace(/^\s+/, "");
+}
+
+function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
+  const amount = moneyText(value);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  const amountWidth = doc.getTextWidth(amount);
+  const symbolWidth = 5.3;
+  const start = align === "right" ? x - amountWidth - symbolWidth : x;
+  drawColonSymbol(doc, start, y + 0.8, 2.3);
+  doc.setTextColor(...COLORS.ink);
+  doc.text(amount, start + symbolWidth, y, { align: "left" });
+}
+
+function addText(doc: any, text: string, x: number, y: number, options: Record<string, unknown> = {}) {
+  doc.text(pdfText(text), x, y, options);
+}
+
 async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ unit: "mm", format: "a5" });
-  await loadPdfFont(doc);
+  const doc: any = new jsPDF({ unit: "mm", format: "a5" });
   const pageW = doc.internal.pageSize.getWidth();
-  let y = 14;
+  const margin = 12;
+  let y = 13;
 
-  // ── Encabezado del negocio ────────────────────────────────────────────
+  doc.setFillColor(...COLORS.navy);
+  doc.rect(0, 0, pageW, 4, "F");
+  doc.setFillColor(...COLORS.teal);
+  doc.rect(0, 4, pageW, 1.2, "F");
+
+  drawBrandMark(doc, margin, y - 3, 18);
+  doc.setTextColor(...COLORS.navy);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.setFont("NotoSans", "bold");
-  doc.text(pdfText(BUSINESS_INFO.name), pageW / 2, y, { align: "center" });
-  y += 6;
+  addText(doc, BUSINESS_INFO.name, margin + 23, y + 6);
+  doc.setTextColor(...COLORS.muted);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  addText(doc, BUSINESS_INFO.legalName, margin + 23, y + 10);
+  addText(doc, `Ced. Jur. ${BUSINESS_INFO.taxId}`, margin + 23, y + 14);
+  addText(doc, `${BUSINESS_INFO.address} - Tel. ${BUSINESS_INFO.phone}`, margin + 23, y + 18);
+  addText(doc, BUSINESS_INFO.email, margin + 23, y + 22);
 
+  const badgeX = pageW - margin - 38;
+  doc.setFillColor(...COLORS.soft);
+  doc.roundedRect(badgeX, y, 38, 25, 2, "F");
+  doc.setTextColor(...COLORS.navy);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.setFont("NotoSans", "normal");
-  doc.text(pdfText(BUSINESS_INFO.legalName), pageW / 2, y, { align: "center" });
-  y += 4;
-  doc.text(pdfText(`Ced. Jur. ${BUSINESS_INFO.taxId}`), pageW / 2, y, { align: "center" });
-  y += 4;
-  doc.text(pdfText(`${BUSINESS_INFO.address} - Tel. ${BUSINESS_INFO.phone}`), pageW / 2, y, { align: "center" });
-  y += 4;
-  doc.text(pdfText(BUSINESS_INFO.email), pageW / 2, y, { align: "center" });
-  y += 7;
-
-  // ── Datos de la factura ───────────────────────────────────────────────
-  doc.setFontSize(10);
-  doc.setFont("NotoSans", "bold");
-  doc.text(`${pdfLabel(l.invoiceNumber)} ${pdfText(sale.invoice_number)}`, pageW / 2, y, { align: "center" });
-  y += 5;
-  doc.setFont("NotoSans", "normal");
+  addText(doc, pdfLabel(l.invoiceNumber), badgeX + 3, y + 7);
   doc.setFontSize(9);
-  doc.text(`${pdfLabel(l.date)}: ${pdfText(formatDate(sale.date))}`, pageW / 2, y, { align: "center" });
-  y += 7;
+  addText(doc, pdfText(sale.invoice_number), badgeX + 3, y + 13);
+  doc.setTextColor(...COLORS.muted);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  addText(doc, `${pdfLabel(l.date)}:`, badgeX + 3, y + 19);
+  addText(doc, pdfText(formatDate(sale.date)), badgeX + 3, y + 23);
+  y += 34;
 
-  doc.setDrawColor(180);
-  doc.line(10, y, pageW - 10, y);
-  y += 5;
+  doc.setFillColor(...COLORS.blue);
+  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  addText(doc, "INFORMACION DE LA VENTA", margin + 4, y + 5.3);
+  y += 14;
 
-  doc.setFontSize(9);
-  doc.setFont("NotoSans", "bold");
-  doc.text(`${pdfLabel(l.customer)}:`, 10, y);
-  doc.setFont("NotoSans", "normal");
-  doc.text(pdfText(sale.customer_name), 45, y);
-  y += 5;
-  doc.setFont("NotoSans", "bold");
-  doc.text(`${pdfLabel(l.paymentMethod)}:`, 10, y);
-  doc.setFont("NotoSans", "normal");
-  doc.text(pdfText(sale.payment_method), 45, y);
+  doc.setTextColor(...COLORS.ink);
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "bold");
+  addText(doc, `${pdfLabel(l.customer)}:`, margin, y);
+  doc.setFont("helvetica", "normal");
+  addText(doc, sale.customer_name, margin + 31, y);
+  doc.setFont("helvetica", "bold");
+  addText(doc, `${pdfLabel(l.paymentMethod)}:`, pageW / 2 + 2, y);
+  doc.setFont("helvetica", "normal");
+  addText(doc, sale.payment_method, pageW / 2 + 31, y);
   if (sale.seller) {
     y += 5;
-    doc.setFont("NotoSans", "bold");
-    doc.text(`${pdfLabel(l.seller)}:`, 10, y);
-    doc.setFont("NotoSans", "normal");
-    doc.text(pdfText(sale.seller), 45, y);
+    doc.setFont("helvetica", "bold");
+    addText(doc, `${pdfLabel(l.seller)}:`, margin, y);
+    doc.setFont("helvetica", "normal");
+    addText(doc, sale.seller, margin + 31, y);
   }
+  y += 8;
+
+  doc.setFillColor(...COLORS.navy);
+  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  addText(doc, pdfLabel(l.product), margin + 4, y + 5.2);
+  addText(doc, pdfLabel(l.quantity), 92, y + 5.2, { align: "right" });
+  addText(doc, pdfLabel(l.unitPrice), 126, y + 5.2, { align: "right" });
+  addText(doc, pdfLabel(l.subtotal), pageW - margin - 4, y + 5.2, { align: "right" });
+  y += 13;
+
+  doc.setTextColor(...COLORS.ink);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  for (const [index, item] of sale.items.entries()) {
+    if (index % 2 === 0) {
+      doc.setFillColor(...COLORS.soft);
+      doc.rect(margin, y - 4.2, pageW - margin * 2, 7, "F");
+    }
+    addText(doc, item.name.slice(0, 28), margin + 4, y);
+    addText(doc, String(item.qty), 92, y, { align: "right" });
+    drawMoney(doc, item.unit_price, 126, y, "right");
+    drawMoney(doc, item.subtotal, pageW - margin - 4, y, "right");
+    y += 7;
+  }
+  y += 3;
+
+  doc.setDrawColor(...COLORS.line);
+  doc.setLineWidth(0.35);
+  doc.line(margin, y, pageW - margin, y);
   y += 7;
 
-  doc.line(10, y, pageW - 10, y);
-  y += 5;
-
-  // ── Cabecera de líneas ────────────────────────────────────────────────
-  doc.setFont("NotoSans", "bold");
-  doc.text(pdfLabel(l.product), 10, y);
-  doc.text(pdfLabel(l.quantity), 88, y, { align: "right" });
-  doc.text(pdfLabel(l.unitPrice), 120, y, { align: "right" });
-  doc.text(pdfLabel(l.subtotal), pageW - 10, y, { align: "right" });
-  y += 4;
-  doc.line(10, y, pageW - 10, y);
-  y += 5;
-
-  doc.setFont("NotoSans", "normal");
-  for (const item of sale.items) {
-    doc.text(pdfText(item.name).slice(0, 30), 10, y);
-    doc.text(String(item.qty), 88, y, { align: "right" });
-    doc.text(pdfCurrency(item.unit_price), 120, y, { align: "right" });
-    doc.text(pdfCurrency(item.subtotal), pageW - 10, y, { align: "right" });
-    y += 6;
-  }
-
-  y += 2;
-  doc.line(10, y, pageW - 10, y);
-  y += 5;
-
-  // ── Totales ───────────────────────────────────────────────────────────
-  const addTotalRow = (label: string, value: string, bold = false) => {
-    doc.setFont("NotoSans", bold ? "bold" : "normal");
-    if (bold) doc.setFontSize(11);
-    doc.text(pdfLabel(label), pageW - 55, y);
-    doc.text(pdfText(value), pageW - 10, y, { align: "right" });
-    if (bold) doc.setFontSize(9);
-    y += 6;
+  const addTotalRow = (label: string, value: number, bold = false) => {
+    doc.setTextColor(...(bold ? COLORS.navy : COLORS.muted));
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(bold ? 11 : 8.5);
+    addText(doc, pdfLabel(label), pageW - 57, y);
+    drawMoney(doc, value, pageW - margin - 4, y, "right");
+    y += bold ? 8 : 6;
   };
 
-  addTotalRow(`${pdfLabel(l.subtotal)}:`, pdfCurrency(sale.subtotal));
+  addTotalRow(`${pdfLabel(l.subtotal)}:`, sale.subtotal);
   if (sale.discount_pct > 0) {
-    addTotalRow(
-      `${pdfLabel(l.discount)} (${sale.discount_pct}%):`,
-      `- ${pdfCurrency((sale.subtotal * sale.discount_pct) / 100)}`
-    );
+    addTotalRow(`${pdfLabel(l.discount)} (${sale.discount_pct}%):`, -(sale.subtotal * sale.discount_pct) / 100);
   }
   if (sale.tax_pct > 0) {
-    addTotalRow(
-      `${pdfLabel(l.tax)} (${sale.tax_pct}%):`,
-      pdfCurrency(sale.subtotal * (1 - sale.discount_pct / 100) * (sale.tax_pct / 100))
-    );
+    addTotalRow(`${pdfLabel(l.tax)} (${sale.tax_pct}%):`, sale.subtotal * (1 - sale.discount_pct / 100) * (sale.tax_pct / 100));
   }
-  addTotalRow(`${pdfLabel(l.total)}:`, pdfCurrency(sale.total), true);
+  addTotalRow(`${pdfLabel(l.total)}:`, sale.total, true);
 
-  y += 6;
+  doc.setFillColor(...COLORS.teal);
+  doc.roundedRect(margin, y + 2, pageW - margin * 2, 9, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.setFont("NotoSans", "italic");
-  doc.text("Gracias por su compra", pageW / 2, y, { align: "center" });
-
+  addText(doc, "Gracias por su compra", pageW / 2, y + 7.5, { align: "center" });
   return doc;
 }
 
-// Descarga el PDF de la factura
 export async function downloadInvoicePdf(sale: InvoiceData, labels: InvoiceLabels) {
   const doc = await buildDoc(sale, labels);
   doc.save(`factura-${sale.invoice_number}.pdf`);
 }
 
-// Abre el diálogo de impresión con la factura
 export async function printInvoicePdf(sale: InvoiceData, labels: InvoiceLabels) {
   const doc = await buildDoc(sale, labels);
   doc.autoPrint();
   const blobUrl = doc.output("bloburl");
   const printWindow = window.open(blobUrl as unknown as string, "_blank");
-  // Si el navegador bloquea la ventana emergente, recurrimos a un iframe oculto
   if (!printWindow) {
     const iframe = document.createElement("iframe");
     iframe.style.display = "none";
