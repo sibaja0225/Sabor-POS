@@ -36,13 +36,13 @@ function pdfText(value: string | number) {
   return String(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[₡€£]/g, "")
+    .replace(/[€£]/g, "")
     .replace(/[¡¿]/g, "")
     .replace(/·/g, "-");
 }
 
 function pdfCurrency(value: number) {
-  return `CRC ${pdfText(formatCurrency(value)).replace(/^\s+/, "")}`;
+  return `₡ ${pdfText(formatCurrency(value)).replace(/^\s+/, "")}`;
 }
 
 function pdfLabel(value: string) {
