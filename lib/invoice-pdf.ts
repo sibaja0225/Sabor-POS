@@ -50,9 +50,21 @@ function pdfLabel(value: string) {
 function drawBrandMark(doc: any, x: number, y: number, size: number) {
   doc.setFillColor(...COLORS.blue);
   doc.roundedRect(x, y + size * 0.68, size, size * 0.16, size * 0.06, size * 0.06, "F");
+  // jsPDF does not expose arc() in the browser build; approximate the cloche curve with line segments.
   doc.setDrawColor(...COLORS.navy);
   doc.setLineWidth(size * 0.06);
-  doc.arc(x + size * 0.5, y + size * 0.68, size * 0.34, 180, 345);
+  const curve = [
+    [x + size * 0.16, y + size * 0.67],
+    [x + size * 0.25, y + size * 0.49],
+    [x + size * 0.39, y + size * 0.38],
+    [x + size * 0.5, y + size * 0.34],
+    [x + size * 0.61, y + size * 0.38],
+    [x + size * 0.75, y + size * 0.49],
+    [x + size * 0.84, y + size * 0.67]
+  ];
+  for (let index = 1; index < curve.length; index += 1) {
+    doc.line(curve[index - 1][0], curve[index - 1][1], curve[index][0], curve[index][1]);
+  }
   doc.setDrawColor(...COLORS.teal);
   doc.setLineWidth(size * 0.08);
   doc.line(x + size * 0.36, y + size * 0.55, x + size * 0.48, y + size * 0.67);
