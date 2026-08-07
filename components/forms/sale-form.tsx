@@ -112,7 +112,8 @@ export function SaleForm({ products }: { products: ProductOption[] }) {
       tax_pct: taxPct,
       total,
       items: saleItems,
-      date: new Date().toISOString()
+      // Use the database timestamp so the PDF matches the persisted invoice time.
+      date: result.created_at ?? new Date().toISOString()
     });
 
     setCustomerName("");

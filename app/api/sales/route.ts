@@ -28,7 +28,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  const { data: sale } = await db.from("sales").select("invoice_number").eq("id", saleId).single();
+  const { data: sale } = await db
+    .from("sales")
+    .select("invoice_number, created_at")
+    .eq("id", saleId)
+    .single();
 
-  return NextResponse.json({ id: saleId, invoice_number: sale?.invoice_number ?? null });
+  return NextResponse.json({
+    id: saleId,
+    invoice_number: sale?.invoice_number ?? null,
+    created_at: sale?.created_at ?? null
+  });
 }
