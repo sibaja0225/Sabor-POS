@@ -54,16 +54,26 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
 
   async function handlePrint() {
     setPdfLoading(true);
-    const data = await fetchInvoice();
-    setPdfLoading(false);
-    if (data) printInvoicePdf(data, invoiceLabels);
+    try {
+      const data = await fetchInvoice();
+      if (data) await printInvoicePdf(data, invoiceLabels);
+    } catch {
+      setError("No fue posible preparar la factura. Intenta nuevamente.");
+    } finally {
+      setPdfLoading(false);
+    }
   }
 
   async function handleDownload() {
     setPdfLoading(true);
-    const data = await fetchInvoice();
-    setPdfLoading(false);
-    if (data) downloadInvoicePdf(data, invoiceLabels);
+    try {
+      const data = await fetchInvoice();
+      if (data) await downloadInvoicePdf(data, invoiceLabels);
+    } catch {
+      setError("No fue posible descargar la factura. Intenta nuevamente.");
+    } finally {
+      setPdfLoading(false);
+    }
   }
 
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {

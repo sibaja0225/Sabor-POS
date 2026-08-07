@@ -90,11 +90,18 @@ function moneyText(value: number) {
   return Number(value ?? 0).toFixed(2);
 }
 
-function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
+function drawMoney(
+  doc: any,
+  value: number,
+  x: number,
+  y: number,
+  align: "left" | "right" = "left",
+  includeCurrencyCode = false
+) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(6.5);
   doc.setTextColor(0, 0, 0);
-  doc.text(`CRC ${moneyText(value)}`, x, y, { align });
+  doc.text(`${includeCurrencyCode ? "CRC " : ""}${moneyText(value)}`, x, y, { align });
 }
 
 function addText(doc: any, text: string, x: number, y: number, options: Record<string, unknown> = {}) {
@@ -219,7 +226,16 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
 
 export async function downloadInvoicePdf(sale: InvoiceData, labels: InvoiceLabels) {
   const doc = await buildDoc(sale, labels);
-  doc.save(`factura-${sale.invoice_number}.pdf`);
+  const blob = doc.output("blob") as Blob;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `factura-${sale.invoice_number}.pdf`;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function printInvoicePdf(sale: InvoiceData, labels: InvoiceLabels) {
