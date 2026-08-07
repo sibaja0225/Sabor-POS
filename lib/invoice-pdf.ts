@@ -92,7 +92,7 @@ function moneyText(value: number) {
 
 function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(6.5);
   doc.setTextColor(0, 0, 0);
   doc.text(`CRC ${moneyText(value)}`, x, y, { align });
 }
@@ -164,9 +164,9 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   addText(doc, pdfLabel(l.product), margin + 4, y + 5.2);
-  addText(doc, pdfLabel(l.quantity), 92, y + 5.2, { align: "right" });
-  addText(doc, pdfLabel(l.unitPrice), 126, y + 5.2, { align: "right" });
-  addText(doc, pdfLabel(l.subtotal), pageW - margin - 4, y + 5.2, { align: "right" });
+  addText(doc, pdfLabel(l.quantity), 82, y + 5.2, { align: "right" });
+  addText(doc, "Precio", 100, y + 5.2, { align: "right" });
+  addText(doc, "Total", pageW - margin, y + 5.2, { align: "right" });
   y += 13;
 
   doc.setTextColor(...COLORS.ink);
@@ -179,7 +179,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
     }
     addText(doc, item.name.slice(0, 28), margin + 4, y);
     addText(doc, String(item.qty), 92, y, { align: "right" });
-    drawMoney(doc, item.unit_price, 126, y, "right");
+    drawMoney(doc, item.unit_price, 113, y, "right");
     drawMoney(doc, item.subtotal, pageW - margin - 4, y, "right");
     y += 7;
   }
