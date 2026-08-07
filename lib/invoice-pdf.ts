@@ -87,23 +87,14 @@ function drawColonSymbol(doc: any, x: number, y: number, size = 2.8) {
 }
 
 function moneyText(value: number) {
-  // The colon is drawn separately so the unsupported currency glyph never reaches jsPDF text.
-  return new Intl.NumberFormat("es-CR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value ?? 0);
+  return Number(value ?? 0).toFixed(2);
 }
 
 function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
-  const amount = moneyText(value);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  const amountWidth = doc.getTextWidth(amount);
-  const symbolWidth = 5.3;
-  const start = align === "right" ? x - amountWidth - symbolWidth : x;
-  drawColonSymbol(doc, start, y + 0.8, 2.3);
-  doc.setTextColor(...COLORS.ink);
-  doc.text(amount, start + symbolWidth, y, { align: "left" });
+  doc.setTextColor(0, 0, 0);
+  doc.text(`CRC ${moneyText(value)}`, x, y, { align });
 }
 
 function addText(doc: any, text: string, x: number, y: number, options: Record<string, unknown> = {}) {
@@ -114,52 +105,53 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   const { jsPDF } = await import("jspdf");
   const doc: any = new jsPDF({ unit: "mm", format: "a5" });
   const pageW = doc.internal.pageSize.getWidth();
-  const margin = 12;
-  let y = 13;
+  const margin = 10;
+  let y = 12;
 
-  doc.setFillColor(...COLORS.navy);
-  doc.rect(0, 0, pageW, 4, "F");
-  doc.setFillColor(...COLORS.teal);
-  doc.rect(0, 4, pageW, 1.2, "F");
+  // Simple layout from the original invoice: logo centered, clean black text, CRC amounts.
+  const logo = new Image();
+  logo.crossOrigin = "anonymous";
+  logo.src = "/sabor-pos-logo.png";
+  await new Promise<void>((resolve) => {
+    logo.onload = () => resolve();
+    logo.onerror = () => resolve();
+  });
+  if (logo.complete && logo.naturalWidth > 0) {
+    doc.addImage(logo, "PNG", pageW / 2 - 13, y, 26, 28);
+    y += 27;
+  }
 
-  drawBrandMark(doc, margin, y - 3, 18);
-  doc.setTextColor(...COLORS.navy);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  addText(doc, BUSINESS_INFO.name, margin + 23, y + 6);
-  doc.setTextColor(...COLORS.muted);
+  addText(doc, BUSINESS_INFO.name, pageW / 2, y, { align: "center" });
+  y += 6;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  addText(doc, BUSINESS_INFO.legalName, margin + 23, y + 10);
-  addText(doc, `Ced. Jur. ${BUSINESS_INFO.taxId}`, margin + 23, y + 14);
-  addText(doc, `${BUSINESS_INFO.address} - Tel. ${BUSINESS_INFO.phone}`, margin + 23, y + 18);
-  addText(doc, BUSINESS_INFO.email, margin + 23, y + 22);
-
-  const badgeX = pageW - margin - 38;
-  doc.setFillColor(...COLORS.soft);
-  doc.roundedRect(badgeX, y, 38, 25, 2, 2, "F");
-  doc.setTextColor(...COLORS.navy);
-  doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  addText(doc, pdfLabel(l.invoiceNumber), badgeX + 3, y + 7);
-  doc.setFontSize(9);
-  addText(doc, pdfText(sale.invoice_number), badgeX + 3, y + 13);
-  doc.setTextColor(...COLORS.muted);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  addText(doc, `${pdfLabel(l.date)}:`, badgeX + 3, y + 19);
-  addText(doc, pdfText(formatDate(sale.date)), badgeX + 3, y + 23);
-  y += 34;
+  addText(doc, BUSINESS_INFO.legalName, pageW / 2, y, { align: "center" });
+  y += 4;
+  addText(doc, `Ced. Jur. ${BUSINESS_INFO.taxId}`, pageW / 2, y, { align: "center" });
+  y += 4;
+  addText(doc, `${BUSINESS_INFO.address} - Tel. ${BUSINESS_INFO.phone}`, pageW / 2, y, { align: "center" });
+  y += 4;
+  addText(doc, BUSINESS_INFO.email, pageW / 2, y, { align: "center" });
+  y += 9;
 
-  doc.setFillColor(...COLORS.blue);
-  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, 2, "F");
-  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  addText(doc, `${pdfLabel(l.invoiceNumber)} ${sale.invoice_number}`, pageW / 2, y, { align: "center" });
+  y += 5;
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  addText(doc, "INFORMACION DE LA VENTA", margin + 4, y + 5.3);
-  y += 14;
+  addText(doc, `${pdfLabel(l.date)}: ${pdfText(formatDate(sale.date))}`, pageW / 2, y, { align: "center" });
+  y += 10;
 
-  doc.setTextColor(...COLORS.ink);
+  doc.setDrawColor(175, 175, 175);
+  doc.setLineWidth(0.35);
+  doc.line(margin, y, pageW - margin, y);
+  y += 6;
+
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(8.5);
   doc.setFont("helvetica", "bold");
   addText(doc, `${pdfLabel(l.customer)}:`, margin, y);
