@@ -572,9 +572,12 @@ th {
 
 @media (max-width: 1100px) {
   .cards-grid,
-  .two-columns,
   .three-columns {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .two-columns {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1199,5 +1202,92 @@ th {
 @media (max-width: 480px) {
   .arqueo-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Evita que el layout de escritorio se comprima dentro del viewport móvil. */
+@media (max-width: 1100px) {
+  .dashboard-shell {
+    display: block !important;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .sidebar-desktop {
+    display: none !important;
+  }
+
+  .sidebar-mobile {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .hamburger-btn {
+    display: inline-grid;
+  }
+
+  .hamburger-placeholder {
+    display: block;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 1rem;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrap table {
+    width: max-content;
+    min-width: 760px;
+  }
+
+  .table-wrap th,
+  .table-wrap td {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .cards-grid,
+  .three-columns,
+  .inline-actions,
+  .line-item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 0.9rem;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .topbar-actions > * {
+    min-width: 0;
   }
 }
