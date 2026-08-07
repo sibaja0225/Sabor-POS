@@ -92,7 +92,7 @@ function moneyText(value: number) {
 
 function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(0, 0, 0);
   doc.text(`CRC ${moneyText(value)}`, x, y, { align });
 }
@@ -164,8 +164,8 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   addText(doc, pdfLabel(l.product), margin + 4, y + 5.2);
-  addText(doc, pdfLabel(l.quantity), 84, y + 5.2, { align: "right" });
-  addText(doc, "P. unitario", 110, y + 5.2, { align: "right" });
+  addText(doc, "Cant.", 84, y + 5.2, { align: "right" });
+  addText(doc, "Precio", 108, y + 5.2, { align: "right" });
   addText(doc, "Subtotal", pageW - margin, y + 5.2, { align: "right" });
   y += 13;
 
