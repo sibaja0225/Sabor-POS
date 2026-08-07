@@ -9,7 +9,9 @@ export function formatCurrency(value: number) {
 export function formatDate(value: string) {
   return new Intl.DateTimeFormat("es-CR", {
     dateStyle: "medium",
-    timeStyle: "short"
+    timeStyle: "short",
+    // Keep server and browser output identical during hydration.
+    timeZone: "America/Costa_Rica"
   }).format(new Date(value));
 }
 
