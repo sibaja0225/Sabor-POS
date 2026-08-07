@@ -1,12 +1,68 @@
 import { NextResponse } from "next/server";
-import { canManageCatalog, getCurrentProfile } from "@/lib/auth";
+import { canManageCatalog, getProfileForApi } from "@/lib/auth";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { supabase } = await getProfileForApi();
+
+  if (!supabase) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const db = supabase as any;
+
+  const { data: sale, error } = await db
+    .from("sales")
+    .select("id, invoice_number, customer_name, payment_method, subtotal, discount_pct, tax_pct, total_amount, created_at")
+    .eq("id", id)
+    .single();
+
+  if (error || !sale) {
+    return NextResponse.json({ error: "Factura no encontrada" }, { status: 404 });
+  }
+
+  const { data: items } = await db
+    .from("sale_items")
+    .select("quantity, unit_price, subtotal, products(name)")
+    .eq("sale_id", id);
+
+  const mappedItems = ((items ?? []) as Array<{
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+    products: { name?: string } | null;
+  }>).map((item) => ({
+    name: item.products?.name ?? "Producto",
+    qty: Number(item.quantity),
+    unit_price: Number(item.unit_price),
+    subtotal: Number(item.subtotal)
+  }));
+
+  return NextResponse.json({
+    invoice_number: sale.invoice_number,
+    customer_name: sale.customer_name,
+    payment_method: sale.payment_method,
+    subtotal: Number(sale.subtotal),
+    discount_pct: Number(sale.discount_pct),
+    tax_pct: Number(sale.tax_pct),
+    total: Number(sale.total_amount),
+    date: sale.created_at,
+    items: mappedItems
+  });
+}
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile } = await getCurrentProfile();
-  const db = supabase as any;
+  const { supabase, profile } = await getProfileForApi();
+
+  if (!supabase || !profile) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
 
   if (!canManageCatalog(profile.role)) {
     return NextResponse.json({ error: "No tienes permiso para editar facturas" }, { status: 403 });
@@ -14,6 +70,7 @@ export async function PATCH(
 
   const body = await request.json();
   const { id } = await params;
+  const db = supabase as any;
 
   const payload = {
     customer_name: String(body.customer_name ?? "").trim() || null,
@@ -33,14 +90,18 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile, user } = await getCurrentProfile();
-  const db = supabase as any;
+  const { supabase, profile, user } = await getProfileForApi();
+
+  if (!supabase || !profile || !user) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
 
   if (!canManageCatalog(profile.role)) {
     return NextResponse.json({ error: "No tienes permiso para eliminar facturas" }, { status: 403 });
   }
 
   const { id } = await params;
+  const db = supabase as any;
 
   const { data: sale, error: saleError } = await db
     .from("sales")

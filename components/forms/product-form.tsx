@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/context";
 
 type ProductFormProps = {
   product?: {
@@ -30,6 +31,7 @@ const emptyState = {
 
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     name: product?.name ?? emptyState.name,
     category: product?.category ?? emptyState.category,
@@ -70,11 +72,11 @@ export function ProductForm({ product }: ProductFormProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible guardar el producto");
+      setError(result.error ?? t.products.saveError);
       return;
     }
 
-    setMessage(product ? "Producto actualizado correctamente" : "Producto creado correctamente");
+    setMessage(product ? t.products.updatedOk : t.products.createdOk);
 
     if (!product) {
       setForm(emptyState);
@@ -88,22 +90,22 @@ export function ProductForm({ product }: ProductFormProps) {
       {error ? <div className="alert alert-error">{error}</div> : null}
       {message ? <div className="alert alert-success">{message}</div> : null}
       <div className="field">
-        <label>Nombre</label>
+        <label>{t.products.name}</label>
         <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
       </div>
       <div className="inline-actions">
         <div className="field">
-          <label>Categoria</label>
+          <label>{t.products.category}</label>
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required />
         </div>
         <div className="field">
-          <label>SKU</label>
+          <label>{t.products.sku}</label>
           <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} required />
         </div>
       </div>
       <div className="inline-actions">
         <div className="field">
-          <label>Precio de venta</label>
+          <label>{t.products.salePrice}</label>
           <input
             type="number"
             min="0"
@@ -114,7 +116,7 @@ export function ProductForm({ product }: ProductFormProps) {
           />
         </div>
         <div className="field">
-          <label>Precio de costo</label>
+          <label>{t.products.costPrice}</label>
           <input
             type="number"
             min="0"
@@ -127,7 +129,7 @@ export function ProductForm({ product }: ProductFormProps) {
       </div>
       <div className="inline-actions">
         <div className="field">
-          <label>Stock actual</label>
+          <label>{t.products.currentStock}</label>
           <input
             type="number"
             min="0"
@@ -137,7 +139,7 @@ export function ProductForm({ product }: ProductFormProps) {
           />
         </div>
         <div className="field">
-          <label>Stock minimo</label>
+          <label>{t.products.minStock}</label>
           <input
             type="number"
             min="0"
@@ -148,17 +150,17 @@ export function ProductForm({ product }: ProductFormProps) {
         </div>
       </div>
       <div className="field">
-        <label>Estado</label>
+        <label>{t.common.status}</label>
         <select
           value={form.active ? "true" : "false"}
           onChange={(e) => setForm({ ...form, active: e.target.value === "true" })}
         >
-          <option value="true">Activo</option>
-          <option value="false">Inactivo</option>
+          <option value="true">{t.common.active}</option>
+          <option value="false">{t.common.inactive}</option>
         </select>
       </div>
       <button className="button" type="submit" disabled={loading}>
-        {loading ? "Guardando..." : product ? "Actualizar producto" : "Crear producto"}
+        {loading ? t.common.saving : product ? t.products.updateProduct : t.products.createProduct}
       </button>
     </form>
   );

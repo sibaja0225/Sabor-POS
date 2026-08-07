@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/forms/login-form";
+import { LanguageToggle } from "@/components/layout/language-toggle";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { getDictionary } from "@/lib/i18n/server";
 
 export default async function LoginPage({
   searchParams
@@ -7,10 +10,15 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const params = await searchParams;
+  const t = await getDictionary();
 
   return (
     <main className="auth-shell">
       <section className="auth-card">
+        <div className="auth-topbar">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
 
         <div
           style={{
@@ -33,9 +41,9 @@ export default async function LoginPage({
 />
 
           <div>
-            <h1 style={{ margin: 0 }}>Sabor POS</h1>
+            <h1 style={{ margin: 0 }}>{t.auth.appName}</h1>
             <p style={{ marginTop: "4px" }}>
-              El sabor de administrar tu negocio fácilmente.
+              {t.auth.tagline}
             </p>
           </div>
 
@@ -52,7 +60,7 @@ export default async function LoginPage({
         <LoginForm />
 
         <p className="muted">
-          No tienes cuenta? <Link href="/register">Crear cuenta</Link>
+          {t.auth.noAccount} <Link href="/register">{t.auth.createAccount}</Link>
         </p>
 
       </section>

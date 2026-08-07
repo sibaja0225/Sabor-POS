@@ -2,6 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/context";
+import { downloadInvoicePdf, printInvoicePdf, type InvoiceData, type InvoiceLabels } from "@/lib/invoice-pdf";
 
 type InvoiceActionsProps = {
   sale: {
@@ -13,12 +15,66 @@ type InvoiceActionsProps = {
 };
 
 export function InvoiceActions({ sale }: InvoiceActionsProps) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [customerName, setCustomerName] = useState(sale.customer_name ?? "");
   const [paymentMethod, setPaymentMethod] = useState(sale.payment_method);
   const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const invoiceLabels: InvoiceLabels = {
+    invoiceNumber: t.invoice.invoiceNumber,
+    date: t.invoice.date,
+    seller: t.invoice.seller,
+    customer: t.sales.customer,
+    paymentMethod: t.sales.paymentMethod,
+    product: t.products.product,
+    quantity: t.sales.quantity,
+    unitPrice: t.invoice.unitPrice,
+    subtotal: t.invoice.subtotal,
+    discount: t.invoice.discount,
+    tax: t.invoice.tax,
+    total: t.invoice.total
+  };
+
+  async function fetchInvoice(): Promise<InvoiceData | null> {
+    setError("");
+    const response = await fetch(`/api/sales/${sale.id}`);
+    const result = await response.json();
+
+    if (!response.ok) {
+      setError(result.error ?? t.sales.invoiceUpdateError);
+      return null;
+    }
+
+    return result as InvoiceData;
+  }
+
+  async function handlePrint() {
+    setPdfLoading(true);
+    try {
+      const data = await fetchInvoice();
+      if (data) await printInvoicePdf(data, invoiceLabels);
+    } catch {
+      setError("No fue posible preparar la factura. Intenta nuevamente.");
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
+  async function handleDownload() {
+    setPdfLoading(true);
+    try {
+      const data = await fetchInvoice();
+      if (data) await downloadInvoicePdf(data, invoiceLabels);
+    } catch {
+      setError("No fue posible descargar la factura. Intenta nuevamente.");
+    } finally {
+      setPdfLoading(false);
+    }
+  }
 
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,7 +96,7 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible actualizar la factura");
+      setError(result.error ?? t.sales.invoiceUpdateError);
       return;
     }
 
@@ -49,7 +105,7 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm(`¿Seguro que deseas eliminar la factura ${sale.invoice_number}?`);
+    const confirmed = window.confirm(`${t.sales.confirmDeleteInvoice} ${sale.invoice_number}?`);
 
     if (!confirmed) return;
 
@@ -64,7 +120,7 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No fue posible eliminar la factura");
+      setError(result.error ?? t.sales.invoiceDeleteError);
       return;
     }
 
@@ -79,20 +135,20 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
           <input
             value={customerName}
             onChange={(event) => setCustomerName(event.target.value)}
-            placeholder="Cliente"
+            placeholder={t.sales.customer}
           />
           <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="sinpe">SINPE</option>
-            <option value="mixto">Mixto</option>
+            <option value="efectivo">{t.sales.cash}</option>
+            <option value="tarjeta">{t.sales.card}</option>
+            <option value="sinpe">{t.sales.sinpe}</option>
+            <option value="mixto">{t.sales.mixed}</option>
           </select>
           <div className="table-actions">
             <button className="button" type="submit" disabled={loading}>
-              Guardar
+              {t.common.save}
             </button>
             <button className="button-secondary" type="button" onClick={() => setEditing(false)} disabled={loading}>
-              Cancelar
+              {t.common.cancel}
             </button>
           </div>
         </form>
@@ -103,11 +159,17 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
   return (
     <div className="table-actions">
       {error ? <div className="mini-error">{error}</div> : null}
+      <button className="button" type="button" onClick={handlePrint} disabled={pdfLoading || loading}>
+        {pdfLoading ? t.common.loading : t.invoice.printInvoice}
+      </button>
+      <button className="button-secondary" type="button" onClick={handleDownload} disabled={pdfLoading || loading}>
+        {t.invoice.downloadPdf}
+      </button>
       <button className="button-secondary" type="button" onClick={() => setEditing(true)} disabled={loading}>
-        Editar
+        {t.common.edit}
       </button>
       <button className="button-danger" type="button" onClick={handleDelete} disabled={loading}>
-        Eliminar
+        {t.common.delete}
       </button>
     </div>
   );

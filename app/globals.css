@@ -1,7 +1,12 @@
 :root {
   --bg: #f8f7ff;
+  --bg-gradient:
+    radial-gradient(circle at top left, rgba(109, 40, 217, 0.14), transparent 28%),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
   --card: #ffffff;
   --card-strong: #f1efff;
+  --input-bg: #ffffff;
   --text: #111827;
   --muted: #64748b;
   --line: #e5e7eb;
@@ -9,9 +14,36 @@
   --accent-dark: #4c1d95;
   --blue: #2563eb;
   --blue-light: #dbeafe;
+  --blue-light-text: #2563eb;
+  --blue-light-border: #bfdbfe;
   --success: #16a34a;
   --danger: #dc2626;
   --shadow: 0 18px 45px rgba(37, 99, 235, 0.12);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1020;
+  --bg-gradient:
+    radial-gradient(circle at top left, rgba(139, 92, 246, 0.20), transparent 30%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 32%),
+    linear-gradient(180deg, #0f1428 0%, var(--bg) 100%);
+  --card: #151b30;
+  --card-strong: #1e2745;
+  --input-bg: #1a2138;
+  --text: #e6e9f5;
+  --muted: #94a3b8;
+  --line: #2a3350;
+  --accent: #8b5cf6;
+  --accent-dark: #7c3aed;
+  --blue: #60a5fa;
+  --blue-light: rgba(96, 165, 250, 0.16);
+  --blue-light-text: #93c5fd;
+  --blue-light-border: rgba(96, 165, 250, 0.3);
+  --success: #34d399;
+  --danger: #f87171;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
 }
 
 * {
@@ -23,15 +55,15 @@ body {
   padding: 0;
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(109, 40, 217, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -49,6 +81,7 @@ textarea {
 .auth-shell,
 .dashboard-shell {
   min-height: 100vh;
+  /* La grilla se define abajo junto al resto del layout */
 }
 
 .auth-shell {
@@ -59,8 +92,8 @@ textarea {
 
 .auth-card {
   width: min(100%, 460px);
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(229, 231, 235, 0.9);
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: 28px;
   padding: 2rem;
   box-shadow: var(--shadow);
@@ -101,7 +134,7 @@ textarea {
 .invoice-edit-form select {
   width: 100%;
   border: 1px solid var(--line);
-  background: white;
+  background: var(--input-bg);
   color: var(--text);
   border-radius: 14px;
   padding: 0.85rem 0.95rem;
@@ -145,8 +178,8 @@ textarea {
 
 .button-secondary {
   background: var(--blue-light);
-  color: var(--blue);
-  border: 1px solid #bfdbfe;
+  color: var(--blue-light-text);
+  border: 1px solid var(--blue-light-border);
 }
 
 .button-danger {
@@ -157,6 +190,65 @@ textarea {
 .dashboard-shell {
   display: grid;
   grid-template-columns: 270px 1fr;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.dashboard-shell > * {
+  min-width: 0;
+}
+
+/* ── Hamburger button (solo visible en móvil) ─────────────────── */
+.hamburger-btn {
+  display: none;
+}
+
+/* ── Sidebar desktop ──────────────────────────────────────────── */
+.sidebar-desktop {
+  display: flex;
+}
+
+/* ── Sidebar móvil (drawer) ───────────────────────────────────── */
+.sidebar-mobile {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  z-index: 200;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.sidebar-mobile.sidebar-mobile-open {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Topbar izquierda ─────────────────────────────────────────── */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.hamburger-placeholder {
+  display: none;
+}
+
+.topbar-email {
+  font-size: 0.82rem;
 }
 
 .sidebar {
@@ -183,7 +275,7 @@ textarea {
   height: 52px;
   object-fit: contain;
   border-radius: 16px;
-  background: white;
+  background: #ffffff;
   padding: 0.25rem;
 }
 
@@ -251,6 +343,10 @@ textarea {
 
 .main-content {
   padding: 1.6rem;
+  min-width: 0;
+  overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .topbar {
@@ -285,16 +381,22 @@ textarea {
   grid-template-columns: 1.15fr 0.85fr;
 }
 
+.sales-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .three-columns {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .card {
   background: var(--card);
-  border: 1px solid #e9eaf3;
+  border: 1px solid var(--line);
   border-radius: 24px;
   padding: 1.2rem;
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .metric-card {
@@ -347,6 +449,7 @@ textarea {
 
 table {
   width: 100%;
+  min-width: 500px;
   border-collapse: collapse;
 }
 
@@ -356,6 +459,7 @@ td {
   padding: 0.9rem 0.75rem;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+  font-size: 0.78rem;
 }
 
 th {
@@ -474,21 +578,87 @@ th {
 
 @media (max-width: 1100px) {
   .cards-grid,
-  .two-columns,
   .three-columns {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .two-columns {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 840px) {
+  /* Dashboard: grid de una sola columna, el sidebar desktop desaparece */
   .dashboard-shell {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    gap: 0.8rem;
+  .sidebar-desktop {
+    display: none;
   }
 
+  /* Activar sidebar móvil (drawer) */
+  .sidebar-mobile {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  /* Hamburger visible */
+  .hamburger-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    /* Posición fija en esquina superior izquierda para que siempre esté accesible */
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 210;
+    transition: background 0.18s ease;
+  }
+
+  .hamburger-btn:hover {
+    background: var(--card-strong);
+  }
+
+  /* El "placeholder" en el topbar ocupa el mismo espacio para no desviar el contenido */
+  .hamburger-placeholder {
+    display: block;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  /* Ajustes de topbar */
+  .topbar {
+    padding-top: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .topbar-left {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .topbar-card strong {
+    font-size: 0.9rem;
+  }
+
+  .topbar-email {
+    display: none;
+  }
+
+  /* Grids de una columna en móvil */
   .cards-grid,
   .two-columns,
   .three-columns,
@@ -499,5 +669,631 @@ th {
 
   .main-content {
     padding: 1rem;
+    min-width: 0;
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.language-toggle-option {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 0.7rem;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.language-toggle-option:hover {
+  color: var(--text);
+}
+
+.language-toggle-option.active {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-topbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Auth brand (logo + nombre) ────────────────────────────────── */
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo {
+  width: 72px;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.auth-brand h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+}
+
+/* ── Ícono de éxito en pantallas de confirmación ────────────────── */
+.auth-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  margin: 0 auto 0.25rem;
+}
+
+/* ── Sección encabezado dentro del formulario ───────────────────── */
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.25rem;
+}
+
+/* ── Layout de perfil ───────────────────────────────────────────── */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.profile-identity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.profile-identity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.profile-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.profile-email {
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 640px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-identity-card {
+    flex-direction: row;
+    text-align: left;
+    padding: 1.25rem;
+  }
+
+  .profile-identity-info {
+    align-items: flex-start;
+  }
+
+  .auth-brand h1 {
+    font-size: 1.25rem;
+  }
+
+  .auth-logo {
+    width: 54px;
+    height: 60px;
+  }
+}
+
+.theme-toggle {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  color: var(--accent);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-actions {
+    justify-content: space-between;
+  }
+
+  .auth-card {
+    padding: 1.4rem;
+    border-radius: 22px;
+  }
+
+  .auth-shell {
+    padding: 1rem;
+  }
+
+  .table-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ── Search / Filter / Pagination ──────────────────────────────── */
+.search-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.search-filter-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.65rem 0.9rem 0.65rem 2.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.filter-select {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.search-filter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.search-count {
+  font-size: 0.82rem;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  min-width: 36px;
+}
+
+.pagination-info {
+  font-size: 0.82rem;
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ── Facturación / IVA / PDF ──────────��───────────────────────── */
+.invoice-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem;
+  background: var(--card-strong);
+  border-radius: 16px;
+  margin-top: 0.5rem;
+}
+
+.invoice-totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.invoice-totals-row.total-row {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  border-top: 1px solid var(--line);
+  padding-top: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.invoice-totals-row input[type="number"] {
+  width: 72px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+/* ── Cierre de caja ────────────────────────────────────────────── */
+.shift-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 16px;
+  background: var(--card-strong);
+  border: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.shift-status-banner.shift-open {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 10%, var(--card));
+}
+
+.shift-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.shift-badge.open {
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: var(--success);
+}
+
+.shift-badge.closed {
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  color: var(--muted);
+}
+
+.shift-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.shift-status-meta {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Tarjeta métrica destacada (efectivo esperado) */
+.metric-card-accent {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+/* Formulario apilado reutilizable */
+.stacked-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+/* Vista previa del arqueo dentro del formulario de cierre */
+.arqueo-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: var(--card-strong);
+  border: 1px solid var(--line);
+}
+
+.arqueo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.arqueo-row span:last-child {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.arqueo-row-total {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+  font-size: 1rem;
+}
+
+.arqueo-row .positive { color: var(--success); }
+.arqueo-row .negative { color: var(--danger); }
+
+/* Lista de detalles del turno activo */
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.92rem;
+}
+
+.detail-row span:last-child {
+  font-weight: 600;
+  text-align: right;
+}
+
+.detail-row-total {
+  margin-top: 0.3rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.detail-row-total span:last-child {
+  color: var(--accent);
+}
+
+/* Diferencia en el historial */
+.arqueo-diff {
+  display: inline-flex;
+  flex-direction: column;
+  font-weight: 700;
+}
+
+.arqueo-diff.positive { color: var(--success); }
+.arqueo-diff.negative { color: var(--danger); }
+
+.arqueo-diff-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.8;
+}
+
+.notes-cell {
+  max-width: 220px;
+  font-size: 0.88rem;
+}
+
+/* ── Perfil / contraseña ───────────────────────────────────────── */
+.profile-card {
+  max-width: 480px;
+}
+
+@media (max-width: 480px) {
+  .arqueo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Evita que el layout de escritorio se comprima dentro del viewport móvil. */
+@media (max-width: 1100px) {
+  .dashboard-shell {
+    display: block !important;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .sidebar-desktop {
+    display: none !important;
+  }
+
+  .sidebar-mobile {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .hamburger-btn {
+    display: inline-grid;
+  }
+
+  .hamburger-placeholder {
+    display: block;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 1rem;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrap table {
+    width: max-content;
+    min-width: 760px;
+  }
+
+  .table-wrap th,
+  .table-wrap td {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .cards-grid,
+  .three-columns,
+  .inline-actions,
+  .line-item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 0.9rem;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .topbar-actions > * {
+    min-width: 0;
   }
 }

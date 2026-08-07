@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { canManageCatalog, getCurrentProfile } from "@/lib/auth";
+import { canManageCatalog, getProfileForApi } from "@/lib/auth";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile } = await getCurrentProfile();
-  const db = supabase as any;
+  const { supabase, profile } = await getProfileForApi();
+
+  if (!supabase || !profile) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
 
   if (!canManageCatalog(profile.role)) {
     return NextResponse.json({ error: "No tienes permiso para actualizar productos" }, { status: 403 });
@@ -26,6 +29,7 @@ export async function PATCH(
     active: Boolean(body.active)
   };
 
+  const db = supabase as any;
   const { error } = await db.from("products").update(payload).eq("id", id);
 
   if (error) {
@@ -35,19 +39,22 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { supabase, profile } = await getCurrentProfile();
-  const db = supabase as any;
+  const { supabase, profile } = await getProfileForApi();
+
+  if (!supabase || !profile) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
 
   if (!canManageCatalog(profile.role)) {
     return NextResponse.json({ error: "No tienes permiso para eliminar productos" }, { status: 403 });
   }
 
   const { id } = await params;
+  const db = supabase as any;
   const { error } = await db.from("products").delete().eq("id", id);
 
   if (error) {

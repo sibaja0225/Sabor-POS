@@ -1,51 +1,64 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/context";
 
 export function RegisterForm() {
-  const router = useRouter();
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
 
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName
-        },
-        emailRedirectTo:
-          typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
-      }
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        fullName,
+        redirectOrigin: window.location.origin
+      })
     });
 
+    const result = await response.json().catch(() => ({}));
     setLoading(false);
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (!response.ok) {
+      setError(result.error ?? t.auth.registerError);
       return;
     }
 
-    router.replace("/login?success=Cuenta%20creada.%20Revisa%20tu%20correo%20si%20tu%20proyecto%20requiere%20confirmacion");
-    router.refresh();
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <div className="form-grid">
+        <div className="alert alert-success">
+          <strong>{t.auth.checkYourEmail}</strong>
+          <p style={{ marginTop: "0.4rem" }}>{t.auth.confirmationSent} <strong>{email}</strong>.</p>
+        </div>
+        <Link href="/login" className="button" style={{ textAlign: "center" }}>
+          {t.auth.goToLogin}
+        </Link>
+      </div>
+    );
   }
 
   return (
     <form onSubmit={handleSubmit} className="form-grid">
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="field">
-        <label htmlFor="full-name">Nombre completo</label>
+        <label htmlFor="full-name">{t.auth.fullName}</label>
         <input
           id="full-name"
           value={fullName}
@@ -55,7 +68,7 @@ export function RegisterForm() {
         />
       </div>
       <div className="field">
-        <label htmlFor="register-email">Correo electronico</label>
+        <label htmlFor="register-email">{t.auth.email}</label>
         <input
           id="register-email"
           type="email"
@@ -65,7 +78,7 @@ export function RegisterForm() {
         />
       </div>
       <div className="field">
-        <label htmlFor="register-password">Contraseña</label>
+        <label htmlFor="register-password">{t.auth.password}</label>
         <input
           id="register-password"
           type="password"
@@ -76,7 +89,7 @@ export function RegisterForm() {
         />
       </div>
       <button type="submit" className="button" disabled={loading}>
-        {loading ? "Creando cuenta..." : "Crear cuenta"}
+        {loading ? t.auth.creatingAccount : t.auth.createAccount}
       </button>
     </form>
   );

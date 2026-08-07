@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { canManageCatalog, getCurrentProfile } from "@/lib/auth";
+import { canManageCatalog, getProfileForApi } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const { supabase, profile, user } = await getCurrentProfile();
+  const { supabase, profile, user } = await getProfileForApi();
+
+  if (!supabase || !profile || !user) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
   const db = supabase as any;
 
   if (!canManageCatalog(profile.role)) {

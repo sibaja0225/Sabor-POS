@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/context";
 
 export function InventoryForm({
   products
@@ -9,6 +10,7 @@ export function InventoryForm({
   products: Array<{ id: string; name: string; sku: string }>;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [productId, setProductId] = useState(products[0]?.id ?? "");
   const [movementType, setMovementType] = useState("in");
   const [quantity, setQuantity] = useState("1");
@@ -40,11 +42,11 @@ export function InventoryForm({
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error ?? "No se pudo registrar el movimiento");
+      setError(result.error ?? t.inventory.movementError);
       return;
     }
 
-    setMessage("Movimiento guardado correctamente");
+    setMessage(t.inventory.movementSaved);
     setQuantity("1");
     setNotes("");
     router.refresh();
@@ -55,7 +57,7 @@ export function InventoryForm({
       {error ? <div className="alert alert-error">{error}</div> : null}
       {message ? <div className="alert alert-success">{message}</div> : null}
       <div className="field">
-        <label>Producto</label>
+        <label>{t.inventory.product}</label>
         <select value={productId} onChange={(e) => setProductId(e.target.value)} required>
           {products.map((product) => (
             <option key={product.id} value={product.id}>
@@ -66,24 +68,24 @@ export function InventoryForm({
       </div>
       <div className="inline-actions">
         <div className="field">
-          <label>Tipo de movimiento</label>
+          <label>{t.inventory.movementType}</label>
           <select value={movementType} onChange={(e) => setMovementType(e.target.value)} required>
-            <option value="in">Entrada</option>
-            <option value="out">Salida</option>
-            <option value="adjustment">Ajuste</option>
+            <option value="in">{t.inventory.in}</option>
+            <option value="out">{t.inventory.out}</option>
+            <option value="adjustment">{t.inventory.adjustment}</option>
           </select>
         </div>
         <div className="field">
-          <label>Cantidad</label>
+          <label>{t.inventory.quantity}</label>
           <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
         </div>
       </div>
       <div className="field">
-        <label>Notas</label>
+        <label>{t.inventory.notes}</label>
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </div>
       <button className="button" type="submit" disabled={loading}>
-        {loading ? "Guardando..." : "Registrar movimiento"}
+        {loading ? t.common.saving : t.inventory.registerMovement}
       </button>
     </form>
   );
