@@ -39,10 +39,20 @@ export function InvoiceActions({ sale }: InvoiceActionsProps) {
     total: t.invoice.total
   };
 
+  function redirectToLogin() {
+    const returnTo = `${window.location.pathname}${window.location.search}`;
+    router.replace(`/login?redirect=${encodeURIComponent(returnTo)}`);
+  }
+
   async function fetchInvoice(): Promise<InvoiceData | null> {
     setError("");
     const response = await fetch(`/api/sales/${sale.id}`);
     const result = await response.json();
+
+    if (response.status === 401) {
+      redirectToLogin();
+      return null;
+    }
 
     if (!response.ok) {
       setError(result.error ?? t.sales.invoiceUpdateError);
