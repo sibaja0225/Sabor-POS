@@ -14,7 +14,7 @@ export default async function SalesPage() {
         <p>{t.sales.subtitle}</p>
       </header>
 
-      <div className="two-columns">
+      <div className="sales-page-stack">
         <article className="card">
           <h2>{t.sales.newSale}</h2>
           {products.length ? (
