@@ -453,6 +453,17 @@ td {
   padding: 0.9rem 0.75rem;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+  overflow-wrap: normal;
+}
+
+.table-wrap th,
+.table-wrap td {
+  white-space: nowrap;
+}
+
+.table-wrap .notes-cell {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 th {
@@ -1414,5 +1425,75 @@ body {
 
   .language-toggle-option {
     padding-inline: 0.55rem;
+  }
+}
+
+/* Último ajuste móvil: ningún panel puede conservar el ancho del sidebar. */
+@media (max-width: 840px) {
+  .dashboard-shell {
+    display: block !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden;
+  }
+
+  .sidebar-desktop {
+    display: none !important;
+    width: 0 !important;
+  }
+
+  .main-content {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-inline: 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .table-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+  }
+
+  .table-wrap table {
+    width: max-content;
+    min-width: 760px;
+    table-layout: auto;
+  }
+
+  .table-wrap th,
+  .table-wrap td {
+    white-space: nowrap;
+  }
+
+  .table-wrap .table-actions {
+    width: max-content;
+    min-width: max-content;
+    flex-wrap: nowrap;
+  }
+
+  .table-wrap .invoice-actions-panel {
+    min-width: 220px;
+  }
+
+  .topbar-card,
+  .topbar-card strong,
+  .topbar-email,
+  .page-header,
+  .page-header h1,
+  .card h2,
+  .card h3,
+  .field label,
+  .alert,
+  button,
+  a {
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 }
