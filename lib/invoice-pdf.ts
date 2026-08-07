@@ -30,15 +30,23 @@ export type InvoiceLabels = {
   total: string;
 };
 
-// jsPDF's built-in Helvetica font does not include the full Unicode character set.
-// Normalize labels and currency symbols so PDFs never render accents as question marks.
+// Use a bundled Unicode font so the Costa Rican colon and Spanish accents render correctly.
+async function loadPdfFont(doc: { addFileToVFS: Function; addFont: Function; setFont: Function }) {
+  const response = await fetch("/fonts/noto-sans-regular.ttf");
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  const base64 = btoa(binary);
+
+  doc.addFileToVFS("NotoSans-Regular.ttf", base64);
+  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
+  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "bold");
+  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "italic");
+  doc.setFont("NotoSans", "normal");
+}
+
 function pdfText(value: string | number) {
-  return String(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[€£]/g, "")
-    .replace(/[¡¿]/g, "")
-    .replace(/·/g, "-");
+  return String(value).replace(/·/g, "-");
 }
 
 function pdfCurrency(value: number) {
@@ -52,17 +60,18 @@ function pdfLabel(value: string) {
 async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a5" });
+  await loadPdfFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
   let y = 14;
 
   // ── Encabezado del negocio ────────────────────────────────────────────
   doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSans", "bold");
   doc.text(pdfText(BUSINESS_INFO.name), pageW / 2, y, { align: "center" });
   y += 6;
 
   doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSans", "normal");
   doc.text(pdfText(BUSINESS_INFO.legalName), pageW / 2, y, { align: "center" });
   y += 4;
   doc.text(pdfText(`Ced. Jur. ${BUSINESS_INFO.taxId}`), pageW / 2, y, { align: "center" });
@@ -74,10 +83,10 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
 
   // ── Datos de la factura ───────────────────────────────────────────────
   doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSans", "bold");
   doc.text(`${pdfLabel(l.invoiceNumber)} ${pdfText(sale.invoice_number)}`, pageW / 2, y, { align: "center" });
   y += 5;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSans", "normal");
   doc.setFontSize(9);
   doc.text(`${pdfLabel(l.date)}: ${pdfText(formatDate(sale.date))}`, pageW / 2, y, { align: "center" });
   y += 7;
@@ -87,20 +96,20 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   y += 5;
 
   doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSans", "bold");
   doc.text(`${pdfLabel(l.customer)}:`, 10, y);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSans", "normal");
   doc.text(pdfText(sale.customer_name), 45, y);
   y += 5;
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSans", "bold");
   doc.text(`${pdfLabel(l.paymentMethod)}:`, 10, y);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSans", "normal");
   doc.text(pdfText(sale.payment_method), 45, y);
   if (sale.seller) {
     y += 5;
-    doc.setFont("helvetica", "bold");
+    doc.setFont("NotoSans", "bold");
     doc.text(`${pdfLabel(l.seller)}:`, 10, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("NotoSans", "normal");
     doc.text(pdfText(sale.seller), 45, y);
   }
   y += 7;
@@ -109,7 +118,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   y += 5;
 
   // ── Cabecera de líneas ────────────────────────────────────────────────
-  doc.setFont("helvetica", "bold");
+  doc.setFont("NotoSans", "bold");
   doc.text(pdfLabel(l.product), 10, y);
   doc.text(pdfLabel(l.quantity), 88, y, { align: "right" });
   doc.text(pdfLabel(l.unitPrice), 120, y, { align: "right" });
@@ -118,7 +127,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   doc.line(10, y, pageW - 10, y);
   y += 5;
 
-  doc.setFont("helvetica", "normal");
+  doc.setFont("NotoSans", "normal");
   for (const item of sale.items) {
     doc.text(pdfText(item.name).slice(0, 30), 10, y);
     doc.text(String(item.qty), 88, y, { align: "right" });
@@ -133,7 +142,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
 
   // ── Totales ───────────────────────────────────────────────────────────
   const addTotalRow = (label: string, value: string, bold = false) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFont("NotoSans", bold ? "bold" : "normal");
     if (bold) doc.setFontSize(11);
     doc.text(pdfLabel(label), pageW - 55, y);
     doc.text(pdfText(value), pageW - 10, y, { align: "right" });
@@ -158,7 +167,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
 
   y += 6;
   doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
+  doc.setFont("NotoSans", "italic");
   doc.text("Gracias por su compra", pageW / 2, y, { align: "center" });
 
   return doc;
