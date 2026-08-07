@@ -164,9 +164,9 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   addText(doc, pdfLabel(l.product), margin + 4, y + 5.2);
-  addText(doc, pdfLabel(l.quantity), 82, y + 5.2, { align: "right" });
-  addText(doc, "Precio", 100, y + 5.2, { align: "right" });
-  addText(doc, "Total", pageW - margin, y + 5.2, { align: "right" });
+  addText(doc, pdfLabel(l.quantity), 84, y + 5.2, { align: "right" });
+  addText(doc, "P. unitario", 110, y + 5.2, { align: "right" });
+  addText(doc, "Subtotal", pageW - margin, y + 5.2, { align: "right" });
   y += 13;
 
   doc.setTextColor(...COLORS.ink);
@@ -178,9 +178,9 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
       doc.rect(margin, y - 4.2, pageW - margin * 2, 7, "F");
     }
     addText(doc, item.name.slice(0, 28), margin + 4, y);
-    addText(doc, String(item.qty), 92, y, { align: "right" });
-    drawMoney(doc, item.unit_price, 113, y, "right");
-    drawMoney(doc, item.subtotal, pageW - margin - 4, y, "right");
+    addText(doc, String(item.qty), 84, y, { align: "right" });
+    drawMoney(doc, item.unit_price, 110, y, "right");
+    drawMoney(doc, item.subtotal, pageW - margin, y, "right");
     y += 7;
   }
   y += 3;
