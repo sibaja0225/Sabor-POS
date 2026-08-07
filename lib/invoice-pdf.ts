@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { BUSINESS_INFO } from "@/lib/business";
 
 export type InvoiceData = {
@@ -49,7 +49,7 @@ function pdfLabel(value: string) {
 
 function drawBrandMark(doc: any, x: number, y: number, size: number) {
   doc.setFillColor(...COLORS.blue);
-  doc.roundedRect(x, y + size * 0.68, size, size * 0.16, size * 0.06, "F");
+  doc.roundedRect(x, y + size * 0.68, size, size * 0.16, size * 0.06, size * 0.06, "F");
   doc.setDrawColor(...COLORS.navy);
   doc.setLineWidth(size * 0.06);
   doc.arc(x + size * 0.5, y + size * 0.68, size * 0.34, 180, 345);
@@ -62,18 +62,24 @@ function drawBrandMark(doc: any, x: number, y: number, size: number) {
 }
 
 function drawColonSymbol(doc: any, x: number, y: number, size = 2.8) {
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(size * 2.5);
-  doc.setTextColor(...COLORS.navy);
-  doc.text("C", x, y);
+  // Draw the Costa Rican colon as vector strokes; this avoids missing-glyph artifacts.
+  doc.setDrawColor(...COLORS.navy);
+  doc.setLineWidth(0.45);
+  doc.line(x + size * 0.95, y - size * 1.55, x + size * 0.25, y - size * 1.55);
+  doc.line(x + size * 0.25, y - size * 1.55, x + size * 0.25, y + size * 0.15);
+  doc.line(x + size * 0.25, y + size * 0.15, x + size * 0.95, y + size * 0.15);
   doc.setDrawColor(...COLORS.teal);
-  doc.setLineWidth(0.35);
-  doc.line(x + size * 0.85, y - size * 1.8, x + size * 0.85, y + size * 0.3);
-  doc.line(x + size * 1.15, y - size * 1.8, x + size * 1.15, y + size * 0.3);
+  doc.setLineWidth(0.3);
+  doc.line(x + size * 0.72, y - size * 1.8, x + size * 0.72, y + size * 0.4);
+  doc.line(x + size * 0.98, y - size * 1.8, x + size * 0.98, y + size * 0.4);
 }
 
 function moneyText(value: number) {
-  return pdfText(formatCurrency(value)).replace(/^\s+/, "");
+  // The colon is drawn separately so the unsupported currency glyph never reaches jsPDF text.
+  return new Intl.NumberFormat("es-CR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value ?? 0);
 }
 
 function drawMoney(doc: any, value: number, x: number, y: number, align: "left" | "right" = "left") {
@@ -119,7 +125,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
 
   const badgeX = pageW - margin - 38;
   doc.setFillColor(...COLORS.soft);
-  doc.roundedRect(badgeX, y, 38, 25, 2, "F");
+  doc.roundedRect(badgeX, y, 38, 25, 2, 2, "F");
   doc.setTextColor(...COLORS.navy);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
@@ -134,7 +140,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   y += 34;
 
   doc.setFillColor(...COLORS.blue);
-  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, "F");
+  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
@@ -161,7 +167,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   y += 8;
 
   doc.setFillColor(...COLORS.navy);
-  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, "F");
+  doc.roundedRect(margin, y, pageW - margin * 2, 8, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
@@ -211,7 +217,7 @@ async function buildDoc(sale: InvoiceData, l: InvoiceLabels) {
   addTotalRow(`${pdfLabel(l.total)}:`, sale.total, true);
 
   doc.setFillColor(...COLORS.teal);
-  doc.roundedRect(margin, y + 2, pageW - margin * 2, 9, 2, "F");
+  doc.roundedRect(margin, y + 2, pageW - margin * 2, 9, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
